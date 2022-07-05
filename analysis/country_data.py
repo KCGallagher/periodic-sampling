@@ -5,6 +5,7 @@
 import os
 import re
 import pandas as pd
+from datetime import datetime
 
 
 def generate_location_df(input_dir, location_key):
@@ -21,8 +22,15 @@ def generate_location_df(input_dir, location_key):
         except KeyError:
             continue
 
-        row["Date"] = file.split(".")[0]
+        row["Date"] = datetime.strptime(file.split(".")[0], '%m-%d-%Y')
         country_df = pd.concat([country_df, row])
+
+    # Resolve naming inconsistencies in data
+    country_df['Incident_Rate'] = country_df['Incident_Rate'].fillna(country_df['Incidence_Rate'])
+    country_df['Case_Fatality_Ratio'] = country_df['Case_Fatality_Ratio'].fillna(country_df['Case-Fatality_Ratio'])
+    country_df.drop(['Incidence_Rate', 'Case-Fatality_Ratio'], axis=1, inplace=True)
+    country_df.dropna(how='all', axis=1, inplace=True)
+
     return country_df
 
 
