@@ -36,7 +36,7 @@ def generate_location_df(input_dir, location_key):
 
 input_dir = "COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/"
 output_dir = "data/"
-location_key = "England, United Kingdom"
+location_key = "Sao Paulo, Brazil"
 
 if __name__ == '__main__':
     country_df = generate_location_df(input_dir, location_key)
