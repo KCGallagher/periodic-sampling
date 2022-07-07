@@ -20,15 +20,21 @@ def generate_location_df(input_dir, location_key):
             df = pd.read_csv(input_dir + file)
             row = df.loc[df["Combined_Key"] == location_key].copy()
         except KeyError:
-            continue
+            if "Province_State" in df.columns.values:
+                row = df.loc[df["Province_State"] == location_key].copy()
+            else:
+                continue
 
         row["Date"] = datetime.strptime(file.split(".")[0], '%m-%d-%Y')
         country_df = pd.concat([country_df, row])
 
     # Resolve naming inconsistencies in data
-    country_df['Incident_Rate'] = country_df['Incident_Rate'].fillna(country_df['Incidence_Rate'])
-    country_df['Case_Fatality_Ratio'] = country_df['Case_Fatality_Ratio'].fillna(country_df['Case-Fatality_Ratio'])
-    country_df.drop(['Incidence_Rate', 'Case-Fatality_Ratio'], axis=1, inplace=True)
+    try:
+        country_df['Incident_Rate'] = country_df['Incident_Rate'].fillna(country_df['Incidence_Rate'])
+        country_df['Case_Fatality_Ratio'] = country_df['Case_Fatality_Ratio'].fillna(country_df['Case-Fatality_Ratio'])
+        country_df.drop(['Incidence_Rate', 'Case-Fatality_Ratio'], axis=1, inplace=True)
+    except KeyError:
+        pass
     country_df.dropna(how='all', axis=1, inplace=True)
 
     return country_df
