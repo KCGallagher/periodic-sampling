@@ -6,6 +6,9 @@ import os
 import numpy as np
 import pandas as pd
 
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
 from country_data import generate_all_df, rel_reporting_calc
 
 
@@ -40,6 +43,7 @@ def average_reporting_factor(df, column):
 
     df = rel_reporting_calc(df, ['Daily_Cases', 'Daily_Deaths'])
     summary = df.groupby('Weekday').mean().sort_values('Day_Index')
+    # Mean required to ensure normalisation of summary - all values ave to 1
     return list(summary['Dif_Daily_' + column].values)
 
 def test_normalisation(arr, rtol):
@@ -50,8 +54,22 @@ def test_normalisation(arr, rtol):
     failures = np.sum(np.invert(agreement))
     print(f"There were {failures} rows out of tolerance.")
 
+def run_pca(arr, n_components):
+    """Runs Principal Component Analysis on input array."""
+    arr = StandardScaler().fit_transform(arr)  # Normalisation
+    pca_obj = PCA(n_components=n_components)
+    pca_output = pca_obj.fit_transform(arr)
+    print('Explained variation per principal component: '
+          + str(pca_obj.explained_variance_ratio_))
+    col_names = [('PC' + str(x + 1)) for x in range(n_components)]
+    pca_df = pd.DataFrame(data=pca_output, columns=col_names,
+                          index=['Mon', 'Tue', 'Wed', 'Thu', 'Fri',
+                                 'Sat', 'Sun'])
+    return pca_df
 
 if __name__ == '__main__':
     generate_all_df(input_dir, output_dir, overwrite_files=False)
     pca_array = generate_pca_array(output_dir, 'Cases')
     test_normalisation(pca_array, rtol=0.05)
+    pca_df = run_pca(np.transpose(pca_array), n_components=2)
+    print(pca_df.round(2))
