@@ -39,6 +39,39 @@ def generate_location_df(input_dir, location_key):
 
     return country_df
 
+def generate_all_df(input_dir, output_dir, overwrite_files = False):
+    """Generates location specific files for all locations found in the
+    first valid file in the directory."""
+    search_index = 0
+    while True:
+        initial_file = os.listdir(input_dir)[search_index]
+        df = pd.read_csv(input_dir + initial_file)
+        if "Combined_Key" in df.columns:
+            locations = df["Combined_Key"].unique()
+        elif "Province_State" in df.columns:
+            locations = df["Province_State"].unique()
+        else:
+            search_index += 1
+            continue
+        break
+
+    for location in locations:
+        output_name = output_dir + re.sub('\W+','',location) + ".csv"
+        if os.path.isfile(output_name) and not overwrite_files:
+            continue
+        country_df = generate_location_df(input_dir, location)
+        country_df.to_csv(output_name)
+
+def rel_reporting_calc(df, column_list):
+    """Adds columns to dataframe giving weekday information,
+    as well as the relative reporting factor."""
+    df['Day_Index'] = df['Date'].apply(lambda x: x.weekday())
+    df['Weekday'] = df['Date'].apply(lambda x: x.day_name())
+    for column in column_list:
+        mean = df[column].rolling(7).mean()
+        df['Dif_' + column] = df[column] / mean
+    return df       
+
 
 input_dir = "COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/"
 output_dir = "data/"
