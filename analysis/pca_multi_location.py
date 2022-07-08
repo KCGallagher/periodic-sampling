@@ -12,9 +12,8 @@ from sklearn.decomposition import PCA
 from country_data import generate_all_df, rel_reporting_calc
 
 
-input_dir = "COVID-19/csse_covid_19_data/csse_covid_19_daily_reports_us/"
-output_dir = "data/us_states/"
-test_dir = "data/uk_test/"
+input_dir = "COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/"
+output_dir = "data/global_data/"
 
 
 def generate_pca_array(search_dir, column):
