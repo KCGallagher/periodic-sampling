@@ -7,7 +7,7 @@ class Parameter:
     """
 
     def __init__(self, initial_value, conditional_posterior, posterior_params):
-        """Constructor method of parameter object
+        """Constructor method of parameter object.
         
         Parameters
         ----------
@@ -23,8 +23,18 @@ class Parameter:
         self.conditional_posterior = conditional_posterior
         self.posterior_params = posterior_params
 
-    def __float__(self):
-        """Overload float method to return value
+    def __str__(self) -> str:
+        """String representation of object.
+        
+        Returns
+        -------
+        str
+            Description of Parameter object
+        """
+        return (f"Parameter of value {self.value}, with {self.conditional_posterior.__name__} conditional posterior")
+
+    def __float__(self) -> float:
+        """Overload float method to return value.
         
         Returns
         -------
