@@ -6,7 +6,7 @@ class Parameter:
     """Parameter object for Gibbs sampler.
     """
 
-    def __init__(self, initial_value, conditional_posterior, posterior_params):
+    def __init__(self, initial_value, conditional_posterior, posterior_params = None):
         """Constructor method of parameter object.
         
         Parameters
@@ -17,7 +17,8 @@ class Parameter:
             Function object that returns random sample from known distribution
         posterior_params : func
             Function object that generates parameters for the conditional_
-            posterior method - returns a dictionary
+            posterior method - returns a dictionary. Optional - if not specified,
+            the params dict will be fed directly into the conditional posterior
         """
         self.value = initial_value
         self.conditional_posterior = conditional_posterior
@@ -57,7 +58,19 @@ class Parameter:
         float
             Value of parameter sampled from conditional posterior
         """
-        param_values = {k: float(v) for k, v in sample_params.items()}
-        post_params = self.posterior_params(**param_values)
+        if self.posterior_params is None:
+            # Can directly feed params into conditional_posterior
+            post_params = sample_params
+        else:
+            param_values = {}
+            for k, v in sample_params.items():
+                try:
+                    param_values[k] = float(v)
+                except TypeError:  # For non float params (such as arrays)
+                    if isinstance(v, Parameter):
+                        param_values[k] = v.value
+                    else:
+                        param_values[k] = v
+            post_params = self.posterior_params(**param_values)
         self.value = self.conditional_posterior(**post_params)
         return self.value
