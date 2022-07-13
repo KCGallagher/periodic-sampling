@@ -44,6 +44,104 @@ class Parameter:
         """
         return float(self.value)
 
+    def __add__(self, other):
+        """Overload addition method.
+        
+        Returns
+        -------
+        float
+            Sum of both arguments, using values for Parameter instances
+        """
+        if isinstance(other, Parameter):
+            return self.value + other.value
+        else:
+            return self.value + other
+
+    def __radd__(self, other):
+        """Overload addition method, reversed arguments (i.e. for
+        other + self)
+        
+        Returns
+        -------
+        float
+            Sum of both arguments, using values for Parameter instances
+        """
+        return self + other  # Result is commutative
+
+    def __sub__(self, other):
+        """Overload subtraction method.
+        
+        Returns
+        -------
+        float
+            Difference of both arguments, using values for Parameter instances
+        """
+        if isinstance(other, Parameter):
+            return self.value - other.value
+        else:
+            return self.value - other
+
+    def __rsub__(self, other):
+        """Overload subtraction method, reversed arguments (i.e. for
+        other + self)
+        
+        Returns
+        -------
+        float
+            Difference of both arguments, using values for Parameter instances
+        """
+        return - (self - other)  # Result is anticommutative
+
+    def __mul__(self, other):
+        """Overload multiplication method.
+        
+        Returns
+        -------
+        float
+            Product of both arguments, using values for Parameter instances
+        """
+        if isinstance(other, Parameter):
+            return self.value * other.value
+        else:
+            return self.value * other
+
+    def __rmul__(self, other):
+        """Overload multiplication method, reversed arguments (i.e. for
+        other * self)
+        
+        Returns
+        -------
+        float
+            Product of both arguments, using values for Parameter instances
+        """
+        return self * other  # Result is commutative
+
+    def __pow__(self, other):
+        """Overload power method.
+        
+        Returns
+        -------
+        float
+            self**other, using values for Parameter instances
+        """
+        if isinstance(other, Parameter):
+            return self.value ** other.value
+        else:
+            return self.value ** other
+
+    def __rpow__(self, other):
+        """Overload power method with Parameter instance in exponent.
+        
+        Returns
+        -------
+        float
+            other**self, using values for Parameter instances
+        """
+        if isinstance(other, Parameter):
+            return other.value ** self.value
+        else:
+            return other ** self.value
+
     def sample(self, sample_params):
         """Samples from the conditional posterior distribution.
         
@@ -74,3 +172,15 @@ class Parameter:
             post_params = self.posterior_params(**param_values)
         self.value = self.conditional_posterior(**post_params)
         return self.value
+
+from numpy.random import gamma
+
+params = {
+    'lambda_1': Parameter(3.0, gamma, lambda a, b, x, n, **kwargs: {'shape':a + sum(x[:int(float(n)+1)]), 'scale':(b+float(n))}),
+    'lambda_2': Parameter(4, gamma, lambda a, b, x, n, **kwargs: {'shape':a + sum(x[int(float(n)+1):]), 'scale':(b+len(x)-float(n))}),
+}
+
+print(float(params['lambda_1']) - 2)
+print(params['lambda_1'] - 2)
+print(2 - params['lambda_1'])
+print(params['lambda_1'] - params['lambda_2'])
