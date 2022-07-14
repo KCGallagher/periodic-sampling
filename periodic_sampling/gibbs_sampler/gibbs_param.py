@@ -1,5 +1,5 @@
 #
-# Class for gibbs parameters
+# Class for Gibbs parameters
 #
 
 class Parameter(float):
