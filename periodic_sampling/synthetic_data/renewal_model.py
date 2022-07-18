@@ -55,8 +55,9 @@ class RenewalModel():
         
 from biased_reporter import Reporter
 model = RenewalModel(R0=0.99)
-model.simulate(1000, 500)
-model.plot()
+model.simulate(100, 50)
+model.plot('')
 
 rep = Reporter(model.case_data)
-rep.unbiased_report('test.csv')
+# rep.unbiased_report('test.csv')
+rep.fixed_bias_report('test.csv', multinomial_dist=True)
