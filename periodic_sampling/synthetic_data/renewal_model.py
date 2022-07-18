@@ -52,12 +52,3 @@ class RenewalModel():
             plt.savefig(os.path.join(save_loc, name))
         else:
             plt.show()
-        
-from biased_reporter import Reporter
-model = RenewalModel(R0=0.99)
-model.simulate(100, 50)
-model.plot('')
-
-rep = Reporter(model.case_data)
-# rep.unbiased_report('test.csv')
-rep.fixed_bias_report('test.csv', multinomial_dist=True)

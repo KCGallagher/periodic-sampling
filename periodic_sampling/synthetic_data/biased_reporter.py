@@ -94,7 +94,7 @@ class Reporter():
             v /= normalisation
 
         if multinomial_dist:
-            df['Confirmed'] = self.rolling_multinomial(list(df['Cases']), bias)
+            df['Confirmed'] = self.rolling_multinomial(df, bias)
         else:
             df['Confirmed'] = df.apply(lambda row: int(row['Cases']
                                        * bias[row['Weekday']]), axis=1)
@@ -102,16 +102,23 @@ class Reporter():
         df.rename(columns={'Cases': 'Ground Truth'}, inplace=True)
         self.unbiased_report(output_path, df)
 
-    def rolling_multinomial(self, data, bias):
+        if output_path is None:
+            return df
+
+    def rolling_multinomial(self, df, bias):
         """For each period of 7 days, redistributes the total number
         of cases according to the bias values
         """
+        data = list(df['Cases'].copy())
         weights = [i / 7 for i in bias.values()]
         week_count = len(data) // 7
+
+        first_day_index = df['Date'][0].weekday()
+        weights = [weights[(i+first_day_index) % 7] for i in range(7)]
+
         for w in range(week_count):
             week_data = data[7*w : 7*(w + 1)]
             day_counts = np.random.multinomial(sum(week_data), weights)
             data[7*w : 7*(w + 1)] = day_counts
         return data
-
 
