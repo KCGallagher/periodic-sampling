@@ -2,6 +2,7 @@
 # Simulation class for a renewal model
 #
 
+import os
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
@@ -39,15 +40,7 @@ class RenewalModel():
             n_terms_gamma = min(t + 1, len(omega))  # Number of terms in sum for gamma
             gamma = sum([omega[i] * cases[-i] for i in range(1, n_terms_gamma)])
             cases.append(np.random.poisson(self.reproduction_num * gamma))
-        self.case_data = cases
-
-    def report(self, output_loc):
-        """Save data to .csv format compatible with
-        John Hopkins Covid Data"""
-        df = pd.DataFrame(self.case_data, columns = ['Confirmed'])
-        # Include date column based on start date provided
-        # Include death data based on fatality rate provided
-        df.to_csv(output_loc)
+        self.case_data = pd.DataFrame(cases, columns = ['Cases'])
 
     def plot(self, save_loc = None):
         """Plot case data over time"""
@@ -56,12 +49,14 @@ class RenewalModel():
         plt.tight_layout()
         if save_loc is not None:
             name = f"synthetic_cases_T_{self.t_step}_N0_{self.N_0}.png"
-            plt.savefig(save_loc + name)
+            plt.savefig(os.path.join(save_loc, name))
         else:
             plt.show()
         
-
+from biased_reporter import Reporter
 model = RenewalModel(R0=0.99)
 model.simulate(1000, 500)
-model.report('test.csv')
 model.plot()
+
+rep = Reporter(model.case_data)
+rep.unbiased_report('test.csv')
