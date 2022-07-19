@@ -5,7 +5,7 @@
 import pandas as pd
 import seaborn as sns
 
-from country_data import rel_reporting_calc
+from .country_data import rel_reporting_calc
 
 
 def rel_reporting_box(daily_df, column, ax, color, label):
