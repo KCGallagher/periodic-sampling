@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
-from country_data import generate_all_df, rel_reporting_calc
+from .country_data import generate_all_df, rel_reporting_calc
 
 
 input_dir = "COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/"
