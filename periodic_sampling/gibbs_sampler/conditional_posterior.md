@@ -52,13 +52,11 @@ $$
 
 However this suffers from a similar issue of intractability without any obvious simplification through conjugate priors.
 
-
 ## Fixed Bias Formulation
 
 We therefore adopt a similar approach, but with a different assumption on the periodic bias of the data - a fixed (scalar) bias.
 
 The simplest form of this formulation is when $C_{t} = \alpha_{w[t]} I_{t}$ - i.e. the ground truth cases are scaled by some weekday-dependant scalar constant to give the observed cases. To generate sufficient noise in the periodicity of the observed (recorded) data however, we use $C_{t} \sim Po(\alpha_{w[t]} I_{t})$, while the true cases are still given by the renewal equation $I_{t} \sim Po(R_{t} \Lambda_{t})$.
-
 
 The parameters are then updated in two steps. First $I_{t}$ is updated via Metropolis-Hastings according to the following conditional probability:
 
