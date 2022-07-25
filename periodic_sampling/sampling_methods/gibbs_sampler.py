@@ -6,13 +6,13 @@ import random
 import pandas as pd
 
 
-class Parameter(float):
+class GibbsParameter(float):
     """Parameter object for Gibbs sampler.
     """
     def __new__(cls, value, conditional_posterior, posterior_params = None):
         """Inherits from float class, so instances of Parameter will be treated as a
         float (of value self.value) in all arithmetic operations."""
-        return super(Parameter, cls).__new__(cls, value)
+        return super(GibbsParameter, cls).__new__(cls, value)
 
     def __init__(self, value, conditional_posterior, posterior_params = None):
         """Constructor method of parameter object.
@@ -40,7 +40,7 @@ class Parameter(float):
         str
             Description of Parameter object
         """
-        return (f"Parameter of value {self.value}, with {self.conditional_posterior.__name__} conditional posterior")
+        return (f"Gibbs Parameter of value {self.value}, with {self.conditional_posterior.__name__} conditional posterior")
 
     def sample(self, sample_params):
         """Samples from the conditional posterior distribution.
@@ -62,7 +62,7 @@ class Parameter(float):
         else:
             param_values = {}
             for k, v in sample_params.items():
-                if isinstance(v, Parameter):
+                if isinstance(v, GibbsParameter):
                     param_values[k] = v.value
                 else:
                     param_values[k] = v
@@ -97,7 +97,7 @@ class GibbsSampler:
             Key from params dictionary corresponding to Parameter
             instance to sample from.
         """
-        assert isinstance(self.params[param_name], Parameter), \
+        assert isinstance(self.params[param_name], GibbsParameter), \
             "Parameter name supplied must correspond to Parameter instance"
         value = self.params[param_name].sample(self.params)
         self.params[param_name].value = value
@@ -123,7 +123,7 @@ class GibbsSampler:
             row = {}
             random.shuffle(list(params.keys()))
             for key in list(params.keys()):
-                if isinstance(params[key], Parameter):
+                if isinstance(params[key], GibbsParameter):
                     row[key] = self.single_sample(key)
             if ((n >= sample_burnin) & (n % sample_period == 0)):
                 history.append(row)
