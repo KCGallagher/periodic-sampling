@@ -103,12 +103,12 @@ class GibbsSampler:
         self.params[param_name].value = value
         return value
 
-    def sampling_routine(self, N, sample_period = 1, sample_burnin = 0):
+    def sampling_routine(self, step_num, sample_period = 1, sample_burnin = 0):
         """Conducts N iterations of a Gibbs Sampler.
         
         Parameters
         ----------
-        N : int
+        step_num : int
             Number of iterations to sample over
         sample_period : int
             How frequently to record samples - as successive
@@ -119,7 +119,7 @@ class GibbsSampler:
         """
         params = self.params
         history = []
-        for n in range(N):
+        for n in range(step_num):
             row = {}
             random.shuffle(list(params.keys()))
             for key in list(params.keys()):
