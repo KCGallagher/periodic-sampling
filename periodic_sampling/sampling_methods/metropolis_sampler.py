@@ -77,15 +77,15 @@ class MetropolisSampler:
         """
         self.params = params
 
-    def _acceptance_decision(self, param, old_value, new_value):
+    def _acceptance_decision(self, param_name, old_value, new_value):
         """Determines whether to accept a given proposed value, compared to
-        the old value.
+        the old value, for a named parameter.
         
         Parameters
         ----------
-        param : MetropolisParameter
-            Parameter object, with methods to determine the prior, likelihood,
-            and the proposal function (default is normally distributed).
+        param_name : str
+            Key from params dictionary corresponding to Parameter
+            instance to sample from.
         old_value : float
             Old value of parameter from previous sample.
         new_value : float
@@ -96,8 +96,10 @@ class MetropolisSampler:
         float : Sampled value of parameter to take forward
             (out of [old_value, new_value]).
         """
-        old_posterior = param.prior(old_value) * param.likelihood(old_value)
-        new_posterior = param.prior(new_value) * param.likelihood(new_value)
+        param = self.params[param_name]
+        other_params = self.params.copy(); other_params.pop(param_name)
+        old_posterior = param.prior(old_value) * param.likelihood(**{param_name: old_value}, **other_params)
+        new_posterior = param.prior(new_value) * param.likelihood(**{param_name: new_value}, **other_params)
 
         hastings_correction = (param.proposal_func(old_value, new_value)
                                / param.proposal_func(new_value, old_value))
@@ -120,8 +122,7 @@ class MetropolisSampler:
             "Parameter name supplied must correspond to Parameter instance"
         old_value = self.params[param_name].value
         proposed_value = self.params[param_name].proposal_value(old_value)
-        value = self._acceptance_decision(self.params[param_name],
-                                         old_value, proposed_value)
+        value = self._acceptance_decision(param_name, old_value, proposed_value)
         self.params[param_name].value = value
         return value
 
