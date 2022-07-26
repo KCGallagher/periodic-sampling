@@ -44,7 +44,7 @@ class MetropolisParameter(float):
         # Default proposal functions - can be redefined for Metropolis Hastings
 
         #   Function to sample from distribution (to propose new value)
-        self.proposal_value = lambda loc : ss.norm.rvs(loc, scale=step_size)
+        self.proposal_value = lambda loc : (ss.norm.rvs(loc, scale=step_size) % 1)
 
         #   Function to generate pdf (for J(theta_1 | theta_2) in acceptance prob)
         #      Should be of the form f(x, y) to calculate P(x | y)
@@ -101,7 +101,6 @@ class MetropolisSampler:
 
         hastings_correction = (param.proposal_func(old_value, new_value)
                                / param.proposal_func(new_value, old_value))
-
         r = min((new_posterior / old_posterior) * hastings_correction, 1)
         decision = math.floor(r + np.random.random())
         return [old_value, new_value][decision]
