@@ -117,7 +117,13 @@ class Reporter():
 
     def _rolling_multinomial(self, df, bias):
         """For each period of 7 days, redistributes the total number
-        of cases according to the bias values
+        of cases according to the bias values.
+
+        Parameters
+        df : pandas.Dataframe
+            Overall dataframe containing cases and date columes
+        bias : list
+            List of fixed weights to use for multinomial distribution
         """
         data = list(df['Cases'].copy())
         weights = [i / 7 for i in bias.values()]
@@ -176,7 +182,17 @@ class Reporter():
         """Takes a value of cases on a given day, and returns the 
         reported number of cases on each day in the next week (including
         the original day) based on a discrete gamma distribution, 
-        with stochastic rounding."""
+        with stochastic rounding.
+        
+        Parameters
+        ----------
+        value : int
+            Number of cases on a given day to redistribute
+        shape : float 
+            Shape parameter for gamma parameter used in redistribution
+        rate : float
+            Rate parameter for gamma parameter used in redistribution
+        """
         unnorm_dist = ss.gamma.pdf(x=list(range(7)), a=shape, scale=1/rate)
         data_bias = (unnorm_dist / (sum(unnorm_dist))) * value
         return [math.floor(x + np.random.uniform()) for x in data_bias]

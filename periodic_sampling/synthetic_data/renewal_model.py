@@ -13,7 +13,15 @@ plt.rcParams['font.size'] = '12'
 class RenewalModel():
     """Simulator class for a Renewal Model"""
 
-    def __init__(self, R0 = 1) -> None:
+    def __init__(self, R0 = 1.0) -> None:
+        """Consutructor method for a Renewal Model
+        
+        Parameters
+        ----------
+        R0 : float
+            The instantaneous reproductive number, constant
+            over time across the pandemic
+        """
         self.reproduction_num = R0
         self.serial_interval = self.calc_serial_interval()
 
@@ -22,15 +30,36 @@ class RenewalModel():
         based on a continuous lognormal distribution.
         
         Default parameter values taken from Nishiura et al. (2020)
-        https://doi.org/10.1016/j.ijid.2020.02.060
+        https://doi.org/10.1016/j.ijid.2020.02.060.
+
+        Parameters
+        ----------
+        mu : float
+            Mean of the lognormal distribution generating the serial interval
+        sigma : float
+            Standard deviation of the lognormal dist for the serial interval
+        days : int
+            Cutoff duration of serial interval
+
+        Returns
+        -------
+        list : Discrete probability distribution for the serial interval
         """
         dist = ss.lognorm(s=np.log(sigma), scale=mu)
         unnorm_values = dist.pdf(range(days))
         return unnorm_values / sum(unnorm_values)
         
     def simulate(self, T, N_0):
-        """Simulate renewal model over T steps,
-        with N_0 initial cases."""
+        """Simulate renewal model over T steps, with N_0 initial cases.
+        Excludes original value due to incomplete history.
+        
+        Parameters
+        ----------
+        T : int
+            Number of steps (days) to simulate
+        N_0 : int
+            Number of initial cases for the renewal model
+        """
         self.t_step = T
         self.N_0 = N_0
 
@@ -40,10 +69,17 @@ class RenewalModel():
             n_terms_gamma = min(t + 1, len(omega))  # Number of terms in sum for gamma
             gamma = sum([omega[i] * cases[-i] for i in range(1, n_terms_gamma)])
             cases.append(np.random.poisson(self.reproduction_num * gamma))
-        self.case_data = pd.DataFrame(cases, columns = ['Cases'])
+        self.case_data = pd.DataFrame(cases[1:], columns = ['Cases'])
 
     def plot(self, save_loc = None):
-        """Plot case data over time"""
+        """Plot case data over time.
+        
+        Parameters
+        ----------
+        save_loc : str
+            File directory to save output image. If not specified,
+            will show image instead of saving.
+        """
         plt.plot(range(len(self.case_data)), self.case_data)
         plt.xlabel("Days"); plt.ylabel("Cases")
         plt.tight_layout()
