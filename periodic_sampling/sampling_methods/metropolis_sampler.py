@@ -3,7 +3,6 @@
 #
 
 import math
-import random
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
@@ -127,7 +126,7 @@ class MetropolisSampler:
         return value
 
     def sampling_routine(self, step_num, sample_period = 1, sample_burnin = 0):
-        """Conducts N iterations of a Metropolis-Hastings Sampler.
+        """Conducts repeated iterations of a Metropolis-Hastings Sampler.
         
         Parameters
         ----------
