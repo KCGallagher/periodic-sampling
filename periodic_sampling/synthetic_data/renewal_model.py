@@ -65,8 +65,8 @@ class RenewalModel():
         self.N_0 = N_0
 
         omega = self.serial_interval
-        cases = [N_0]
-        for t in tqdm(range(1, T)):
+        cases = [N_0 / omega[1]]  # Scale N_0 to account for missing history
+        for t in tqdm(range(1, T + 1)):
             n_terms_gamma = min(t + 1, len(omega))  # Number of terms in sum for gamma
             gamma = sum([omega[i] * cases[-i] for i in range(1, n_terms_gamma)])
             cases.append(np.random.poisson(self.reproduction_num * gamma))
@@ -81,7 +81,7 @@ class RenewalModel():
             File directory to save output image. If not specified,
             will show image instead of saving.
         """
-        plt.plot(range(len(self.case_data)), self.case_data)
+        plt.plot(range(len(self.case_data)), self.case_data['Cases'])
         plt.xlabel("Days"); plt.ylabel("Cases")
         plt.tight_layout()
         if save_loc is not None:
