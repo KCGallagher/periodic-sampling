@@ -5,6 +5,7 @@
 import os
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 import scipy.stats as ss
 import matplotlib.pyplot as plt
 plt.rcParams['font.size'] = '12'
@@ -65,7 +66,7 @@ class RenewalModel():
 
         omega = self.serial_interval
         cases = [N_0]
-        for t in range(1, T):
+        for t in tqdm(range(1, T)):
             n_terms_gamma = min(t + 1, len(omega))  # Number of terms in sum for gamma
             gamma = sum([omega[i] * cases[-i] for i in range(1, n_terms_gamma)])
             cases.append(np.random.poisson(self.reproduction_num * gamma))

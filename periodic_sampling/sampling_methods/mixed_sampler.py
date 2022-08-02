@@ -4,6 +4,7 @@
 
 import random
 import pandas as pd
+from tqdm import tqdm
 
 from .gibbs_sampler import GibbsParameter, GibbsSampler
 from .metropolis_sampler import MetropolisParameter, MetropolisSampler
@@ -50,7 +51,7 @@ class MixedSampler:
 
         params = self.params
         history = []
-        for n in range(step_num):
+        for n in tqdm(range(step_num)):
             row = {}
             if random_order:
                 random.shuffle(list(params.keys()))
