@@ -8,7 +8,7 @@ Timeseries from real Covid-19 data may be used, or generated synthetically from 
 
 ### Real Data
 
-We import Covid-19 case and death data from the [John Hopkins Database](https://coronavirus.jhu.edu/about). This data uploaded into separate `.csv` files on a daily basis, and so [routines](periodic_sampling/analysis/country_data.py in the analysis module are provided to generate location-specific files over the history of the pandemic.
+We import Covid-19 case and death data from the [John Hopkins Database](https://coronavirus.jhu.edu/about). This data uploaded into separate `.csv` files on a daily basis, and so [routines](periodic_sampling/analysis/country_data.py) in the analysis module are provided to generate location-specific files over the history of the pandemic.
 
 For example:
 
@@ -25,7 +25,7 @@ country_df.to_csv("data/England_data.csv")
 More detailed examples (along with cleaning procedures for the data) are given in [`data_trends.ipynb`](periodic_sampling/data_trends.ipynb).
 Currently these procedures are not packaged into a separate method, but this may be updated in the future.
 
-Further information about this data (such as collection methods) can be found in a dedicated [`README`](data/README.md).
+Further information about this data (such as collection methods) can be found in a dedicated [`README`](data/README.md). Pre-generated example data files are also [available](data).
 
 ### Periodic Reporting Trends
 
