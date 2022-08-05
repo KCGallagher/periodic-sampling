@@ -64,6 +64,6 @@ class MixedSampler:
                     gibbs.params = self.params
                     row[key] = gibbs.single_sample(key)
                     self.params[key].value = row[key]
-            if ((n >= sample_burnin) & (n % sample_period == 0)):
+            if (((n + 1) > sample_burnin) & ((n + 1) % sample_period == 0)):
                 history.append(row)
         return pd.DataFrame(history)
