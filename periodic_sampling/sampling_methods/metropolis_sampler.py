@@ -60,6 +60,16 @@ class MetropolisParameter(float):
         """
         return (f"Metropolis Parameter of value {self.value}")
 
+    def __repr__(self) -> str:
+        """Print representation of object.
+        
+        Returns
+        -------
+        str
+            Value of Parameter object
+        """
+        return str(self.value)
+
 
 class MetropolisSampler:
     """Sampling class using Gibbs methods"""

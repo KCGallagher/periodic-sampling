@@ -40,7 +40,17 @@ class GibbsParameter(float):
         str
             Description of Parameter object
         """
-        return (f"Gibbs Parameter of value {self.value}, with {self.conditional_posterior.__name__} conditional posterior")
+        return (f"Gibbs Parameter of value {self.value}")#, with {self.conditional_posterior.__name__} conditional posterior")
+
+    def __repr__(self) -> str:
+        """Print representation of object.
+        
+        Returns
+        -------
+        str
+            Value of Parameter object
+        """
+        return str(self.value)
 
     def sample(self, sample_params):
         """Samples from the conditional posterior distribution.
