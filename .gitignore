@@ -8,3 +8,8 @@ __pycache__/
 # Bulk datafiles for international analysis
 data/*/
 !data/outputs/
+
+# Profiling outputs
+*.prof
+*.lprof
+
