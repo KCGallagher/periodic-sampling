@@ -4,6 +4,12 @@
 # Run `python3 kernprof.py -l periodic_sampling/fixed_bias_workflow.py`` to profile
 # Run `python3 -m line_profiler fixed_bias_workflow.py.lprof' to view results
 #
+# Current results indicate sampling the logpdf from the possion dist for the data point
+# independent sampling is heaviest - this could be reduced by targeted sampling (i.e. 
+# coarse sampling across whole range, then finer sampling in most likely region),
+# however this cost is fundamentally not easily avoided (and outweighs any potential
+# benefits of optimisation elsewhere in the code.)
+#
 
 import datetime
 import numpy as np
