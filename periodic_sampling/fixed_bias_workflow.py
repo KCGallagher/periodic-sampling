@@ -23,7 +23,7 @@ from sampling_methods import GibbsParameter, MixedSampler
 
 ####### INFERENCE METHODS #######
 
-@profile
+# @profile
 def truth_loglikelihood(params, index, value):
     """The independant probability of a given value for a given index of truth time series."""
     prob_truth = ss.poisson.logpmf(k=value,
@@ -37,7 +37,7 @@ def truth_loglikelihood(params, index, value):
     #     print([value, prob_truth, prob_measurement])
     return prob_truth + prob_measurement
 
-@profile
+# @profile
 def _calculate_gamma(params, max_t):
     """Historic gama factor for a given index of data series"""
     if max_t == 0:
@@ -49,7 +49,7 @@ def _calculate_gamma(params, max_t):
         omega = omega / sum(omega[:n_terms_gamma])
     return sum([omega[i] * cases[max_t - i] for i in range(1, n_terms_gamma)])
 
-@profile
+# @profile
 def _categorical_log(log_p):
     """Generate one sample from a categorical distribution with event
     probabilities provided in log-space. Credit to Richard Creswell.
@@ -71,7 +71,7 @@ def _categorical_log(log_p):
     sample = next(x[0]-1 for x in enumerate(events) if x[1] >= exp_sample)
     return sample
 
-@profile
+# @profile
 def truth_sample(params, index):
     """Independent sample of a single datapoint from the truth timeseries."""
     weights = []
@@ -84,7 +84,7 @@ def truth_sample(params, index):
     index = _categorical_log(weights)
     return values[index]
 
-@profile
+# @profile
 def bias_pdf_params(index, value, **kwargs):
     """Parameters for the probability density function (pdf) for 
     a given index of the bias vector."""
@@ -129,47 +129,103 @@ def truth_parameter(value, index):
 
 ####### INFERENCE WORKFLOW #######
 
+# # Simulate Renewal Model
+# time_steps = 30; N_0 = 100; R_0=0.99; seed=42
+# start_date = '01/01/2020'
+# bias = [0.5, 1.4, 1.2, 1.1, 1.1, 1.1, 0.6]  # Always given with monday first
+
+# np.random.seed(seed)
+# model = RenewalModel(R0=R_0)
+# model.simulate(T=time_steps, N_0=N_0)
+
+# # Report unbiased and biased data
+# rep = Reporter(model.case_data, start_date=start_date)  # Start on Mon 6th for ease
+
+# truth_df = rep.unbiased_report()
+# bias_df = rep.fixed_bias_report(bias=bias, method='multinomial')
+
+# I_data = list(bias_df['Confirmed'])
+# params = {'bias_prior_alpha': 1, 'bias_prior_beta': 1}  # Gamma dist
+
+# params['R_t'] = R_0  # Start with known R_t (0.99)
+# params['serial_interval'] = RenewalModel(R0=params['R_t']).serial_interval
+
+# for i, val in enumerate(I_data):  # Observed cases - not a Parameter
+#     params[("data_" + str(i))] = val
+
+# data_initial_guess = sum(I_data)/len(I_data)  # Constant initial value
+# for i in range(0, len(I_data)):  # Ground truth data
+#     params[("truth_" + str(i))] = truth_parameter(data_initial_guess, index=i)
+
+# for i in range(7):  # Weekday bias parameters
+#     params[("bias_" + str(i))] = bias_parameter(1, index=i)
+
+# step_num = 2
+# sampler = MixedSampler(params=params)
+# output = sampler.sampling_routine(step_num=step_num, sample_burnin=1)
+
+# filename = f"synth_inference_T_{time_steps}_N0_{N_0}_R0_{R_0}_It_{step_num}_seed_{seed}.csv"
+# output.to_csv('data/outputs/' + filename)
+
+# start_index = datetime.datetime.strptime(start_date, "%d/%m/%Y").weekday()
+# output_bias = [np.round(np.mean(output['bias_' + str((i - start_index) % 7)]), 1) for i in range(7)]
+
+# print("Mean bias values: " + str(output_bias))
+# print(f"True bias values: {bias}")
+
+
+####### MULTI-TIMESERIES WORKFLOW
+
 # Simulate Renewal Model
-time_steps = 30; N_0 = 100; R_0=0.99; seed=42
-start_date = '01/01/2020'
+time_steps = 400; N_0 = 100; R_0=0.99; 
+start_date = '01/01/2020'; bias_method = 'multinomial'
 bias = [0.5, 1.4, 1.2, 1.1, 1.1, 1.1, 0.6]  # Always given with monday first
 
-np.random.seed(seed)
-model = RenewalModel(R0=R_0)
-model.simulate(T=time_steps, N_0=N_0)
+step_num = 50; seeds = list(range(8))
 
-# Report unbiased and biased data
-rep = Reporter(model.case_data, start_date=start_date)  # Start on Mon 6th for ease
+output = pd.DataFrame()
+for seed in seeds:
+    np.random.seed(seed)
+    model = RenewalModel(R0=R_0)
+    model.simulate(T=time_steps, N_0=N_0, display_progress=False)
 
-truth_df = rep.unbiased_report()
-bias_df = rep.fixed_bias_report(bias=bias, method='multinomial')
+    rep = Reporter(model.case_data, start_date=start_date)  # Start on Mon 6th for ease
+    bias_df = rep.fixed_bias_report(bias=bias, method=bias_method)
 
-I_data = list(bias_df['Confirmed'])
-params = {'bias_prior_alpha': 1, 'bias_prior_beta': 1}  # Gamma dist
+    I_data = list(bias_df['Confirmed'])
+    params = {'bias_prior_alpha': 1, 'bias_prior_beta': 1}  # Gamma dist
 
-params['R_t'] = R_0  # Start with known R_t (0.99)
-params['serial_interval'] = RenewalModel(R0=params['R_t']).serial_interval
+    params['R_t'] = R_0  # Start with known R_t (0.99)
+    params['serial_interval'] = RenewalModel(R0=params['R_t']).serial_interval
 
-for i, val in enumerate(I_data):  # Observed cases - not a Parameter
-    params[("data_" + str(i))] = val
+    for i, val in enumerate(I_data):  # Observed cases - not a Parameter
+        params[("data_" + str(i))] = val
 
-data_initial_guess = sum(I_data)/len(I_data)  # Constant initial value
-for i in range(0, len(I_data)):  # Ground truth data
-    params[("truth_" + str(i))] = truth_parameter(data_initial_guess, index=i)
+    data_initial_guess = sum(I_data)/len(I_data)  # Constant initial value
+    for i in range(0, len(I_data)):  # Ground truth data
+        params[("truth_" + str(i))] = truth_parameter(data_initial_guess, index=i)
 
-for i in range(7):  # Weekday bias parameters
-    params[("bias_" + str(i))] = bias_parameter(1, index=i)
+    for i in range(7):  # Weekday bias parameters
+        params[("bias_" + str(i))] = bias_parameter(1, index=i)
 
-step_num = 2
-sampler = MixedSampler(params=params)
-output = sampler.sampling_routine(step_num=step_num, sample_burnin=1)
+    sampler = MixedSampler(params=params)
+    output = pd.concat([output, sampler.sampling_routine(step_num=step_num, sample_burnin=1)], axis=0)
 
-filename = f"synth_inference_T_{time_steps}_N0_{N_0}_R0_{R_0}_It_{step_num}_seed_{seed}.csv"
-output.to_csv('data/outputs/' + filename)
+filename = f"synth_inference_T_{time_steps}_N0_{N_0}_R0_{R_0}_It_{step_num}_seeds_{len(seeds)}.csv"
+output.to_csv('data/outputs/multiseries/' + filename)
 
 start_index = datetime.datetime.strptime(start_date, "%d/%m/%Y").weekday()
 output_bias = [np.round(np.mean(output['bias_' + str((i - start_index) % 7)]), 1) for i in range(7)]
 
+output.hist([("bias_" + str(i)) for i in range(7)], bins=20, figsize=(15, 4), layout=(2,4));
+plt.tight_layout()
+plt.savefig("images/synthetic_inference/multiseries/"
+            + f"biases_posterior_{bias_method}_T_{time_steps}_N0_{N_0}_R0_{R_0}_It_{step_num}_seeds_{len(seeds)}.png")
+
 print("Mean bias values: " + str(output_bias))
 print(f"True bias values: {bias}")
 
+for i in range(7):
+    mean = np.round(np.mean(output['bias_' + str((i - start_index) % 7)]), 2)
+    std = np.round(np.std(output['bias_' + str((i - start_index) % 7)]), 2)
+    print(f"Bias_{i}: {mean} +/- {std}")

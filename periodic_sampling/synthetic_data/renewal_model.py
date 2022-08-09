@@ -50,7 +50,7 @@ class RenewalModel():
         unnorm_values = dist.pdf(range(days))
         return unnorm_values / sum(unnorm_values)
         
-    def simulate(self, T, N_0):
+    def simulate(self, T, N_0, display_progress = True):
         """Simulate renewal model over T steps, with N_0 initial cases.
         Excludes original value due to incomplete history.
         
@@ -60,13 +60,15 @@ class RenewalModel():
             Number of steps (days) to simulate
         N_0 : int
             Number of initial cases for the renewal model
+        display_progress : bool
+            Whether to display the tqdm progress bar
         """
         self.t_step = T
         self.N_0 = N_0
 
         omega = self.serial_interval
         cases = [N_0 / omega[1]]  # Scale N_0 to account for missing history
-        for t in tqdm(range(1, T + 1)):
+        for t in tqdm(range(1, T + 1), disable = not display_progress):
             n_terms_gamma = min(t + 1, len(omega))  # Number of terms in sum for gamma
             gamma = sum([omega[i] * cases[-i] for i in range(1, n_terms_gamma)])
             cases.append(np.random.poisson(self.reproduction_num * gamma))
