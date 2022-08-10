@@ -177,11 +177,11 @@ def truth_parameter(value, index):
 ####### MULTI-TIMESERIES WORKFLOW
 
 # Simulate Renewal Model
-time_steps = 400; N_0 = 100; R_0=0.99; 
+time_steps = 600; N_0 = 100; R_0=0.99; 
 start_date = '01/01/2020'; bias_method = 'multinomial'
 bias = [0.5, 1.4, 1.2, 1.1, 1.1, 1.1, 0.6]  # Always given with monday first
 
-step_num = 50; seeds = list(range(8))
+step_num = 100; seeds = list(range(20))
 
 output = pd.DataFrame()
 for seed in seeds:
@@ -217,7 +217,11 @@ output.to_csv('data/outputs/multiseries/' + filename)
 start_index = datetime.datetime.strptime(start_date, "%d/%m/%Y").weekday()
 output_bias = [np.round(np.mean(output['bias_' + str((i - start_index) % 7)]), 1) for i in range(7)]
 
-output.hist([("bias_" + str(i)) for i in range(7)], bins=20, figsize=(15, 4), layout=(2,4));
+histos = output.hist([("bias_" + str((i - start_index) % 7)) for i in range(7)], bins=20, figsize=(15, 4), layout=(2, 4));
+weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+for i in range(7):
+    histos.flatten()[i].set_title(weekdays[i])
+    histos.flatten()[i].vlines(x=bias[i], ymin=0, ymax=histos.flatten()[i].get_ylim()[1], color='tab:red', linewidth=3)
 plt.tight_layout()
 plt.savefig("images/synthetic_inference/multiseries/"
             + f"biases_posterior_{bias_method}_T_{time_steps}_N0_{N_0}_R0_{R_0}_It_{step_num}_seeds_{len(seeds)}.png")
