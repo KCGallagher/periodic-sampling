@@ -178,13 +178,14 @@ def truth_parameter(value, index):
 
 # Simulate Renewal Model
 time_steps = 600; N_0 = 100; R_0=0.99; 
-start_date = '01/01/2020'; bias_method = 'multinomial'
+start_date = '01/01/2020'; bias_method = 'poisson'
 bias = [0.5, 1.4, 1.2, 1.1, 1.1, 1.1, 0.6]  # Always given with monday first
 
 step_num = 100; seeds = list(range(20))
 
 output = pd.DataFrame()
 for seed in seeds:
+    print("Interation: " + str(seed))
     np.random.seed(seed)
     model = RenewalModel(R0=R_0)
     model.simulate(T=time_steps, N_0=N_0, display_progress=False)
