@@ -2,5 +2,14 @@
 __pycache__/
 *.py[cod]
 
+# Jupyter Notebook checkpoints
+*/.ipynb_checkpoints
+
 # Bulk datafiles for international analysis
 data/*/
+!data/outputs/
+
+# Profiling outputs
+*.prof
+*.lprof
+

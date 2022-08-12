@@ -60,7 +60,7 @@ class Reporter():
         else:
             return df
 
-    def fixed_bias_report(self, output_path=None, bias=None, multinomial_dist=False):
+    def fixed_bias_report(self, output_path=None, bias=None, method = "scale"):
         """Adds a fixed weekly reporting bias to the case data. 
         Save data to .csv format at 'output_loc' compatible with
         John Hopkins Covid Data, without modifying data.
@@ -78,9 +78,11 @@ class Reporter():
             All values in the dictionary should average to unity,
             but normalisation will enforce this. Can also be passed
             as a list, where the first item corresponds to Monday.
-        multinomial_dist : bool
-            Boolean whether to reallocate cases based on a random multinomial
-            distribution, or deterministically according to proportions provided
+        method : str
+            Method used to bias case data. 'scale' corresponds to a deterministic
+            scaling, 'poisson' selects the scaled value from a poisson distribution,
+            and 'multinomial' reallocated cases based on a random multinomial
+            distribution.
         """
         df = self.case_data.copy()
 
@@ -103,11 +105,17 @@ class Reporter():
         for v in bias.values():
             v /= normalisation
 
-        if multinomial_dist:
-            df['Confirmed'] = self._rolling_multinomial(df, bias)
-        else:
+        if method == 'scale':
             df['Confirmed'] = df.apply(lambda row: int(row['Cases']
                                        * bias[row['Weekday']]), axis=1)
+        elif method == 'poisson':
+            df['Confirmed'] = df.apply(lambda row: ss.poisson.rvs(row['Cases'] * bias[row['Weekday']]), axis=1)
+        elif method == 'multinomial':
+            df['Confirmed'] = self._rolling_multinomial(df, bias)
+        else:
+            raise ValueError(f"Unknown method argument {method} - valid"
+                             + " arguments are scale, poisson and multinomial")
+
 
         df.rename(columns={'Cases': 'Ground Truth'}, inplace=True)
         self.unbiased_report(output_path, df)
@@ -117,7 +125,13 @@ class Reporter():
 
     def _rolling_multinomial(self, df, bias):
         """For each period of 7 days, redistributes the total number
-        of cases according to the bias values
+        of cases according to the bias values.
+
+        Parameters
+        df : pandas.Dataframe
+            Overall dataframe containing cases and date columes
+        bias : list
+            List of fixed weights to use for multinomial distribution
         """
         data = list(df['Cases'].copy())
         weights = [i / 7 for i in bias.values()]
@@ -176,7 +190,17 @@ class Reporter():
         """Takes a value of cases on a given day, and returns the 
         reported number of cases on each day in the next week (including
         the original day) based on a discrete gamma distribution, 
-        with stochastic rounding."""
+        with stochastic rounding.
+        
+        Parameters
+        ----------
+        value : int
+            Number of cases on a given day to redistribute
+        shape : float 
+            Shape parameter for gamma parameter used in redistribution
+        rate : float
+            Rate parameter for gamma parameter used in redistribution
+        """
         unnorm_dist = ss.gamma.pdf(x=list(range(7)), a=shape, scale=1/rate)
         data_bias = (unnorm_dist / (sum(unnorm_dist))) * value
         return [math.floor(x + np.random.uniform()) for x in data_bias]
