@@ -27,8 +27,13 @@ def _truth_loglikelihood(params, index, value):
     -------
     float : Loglikelihood of the value at the given index in the timeseries
     """
+    if ('R_' + str(index)) in params:
+        R_value = params['R_' + str(index)]
+    else:  # Use constant R value
+        R_value = params['R_t']
+    
     prob_truth = ss.poisson.logpmf(k=value,
-                                mu=_calculate_gamma(params, index) * params['R_t'])
+                                mu=_calculate_gamma(params, index) * R_value)
 
     prob_measurement = ss.poisson.logpmf(k=params['data_' + str(index)],
                                       mu=(params['bias_' + str(index % 7)].value 
@@ -183,14 +188,17 @@ def bias_parameter(value, index):
         value=value, conditional_posterior=ss.gamma.rvs,
         posterior_params = lambda **kwargs : _bias_pdf_params(index=index, value=value, **kwargs))
 
-#  --- RT PARAMETERS ---
+#  --- R PARAMETERS (constant and variable R)---
 
-def _constant_r_params(**kwargs):
+def _rt_params(index=None, **kwargs):
     """Parameters for the probability density function (pdf) for 
     a single (constant) reproductive number.
     
     Parameters
     ----------
+    index : int
+        Index of the timeseries to which this Rt value corresponds. Pass 'None' if
+        the R value is constant over time
     kwargs : Unpacked dict
         Unpacked collection of parameters objects
         
@@ -200,11 +208,17 @@ def _constant_r_params(**kwargs):
     """
     params = kwargs
 
+    if index is None:  # For constant R case - considers whole timeseries
+        window_start = 0
+    else:  # To compute params for a single index of a time varying Rt 
+        window_start = max(0, index-params['Rt_window'])  # Typically -7 for one week
+        index += 1  # So range includes current value
+
     unsorted_indicies = [int(k[len('data_'):]) for k in params.keys() if k.startswith('data_')]
     data_indicies = [k for k in sorted(unsorted_indicies)]
     data_values = []; gamma_values = []
 
-    for i in data_indicies:
+    for i in data_indicies[window_start:index]:
         data_values.append(params['data_' + str(i)])
         gamma_values.append(_calculate_gamma(params, i))
 
@@ -228,4 +242,22 @@ def fixed_r_parameter(value):
     GibbsParameter : Parameter object for constant reproductive number    
         """
     return GibbsParameter(value=value, conditional_posterior=ss.gamma.rvs, 
-                            posterior_params=_constant_r_params)
+                            posterior_params=lambda **kwargs : _rt_params(index=None, **kwargs))
+
+def rt_parameter(value, index):
+    """Parameters for the probability density function (pdf) for 
+    a single (constant) reproductive number.
+    
+    Parameters
+    ----------
+    value : int
+        Initial value for this parameter object
+    index : int
+        Index of the timeseries to which this Rt value corresponds
+    
+    Returns
+    -------
+    GibbsParameter : Parameter object for constant reproductive number    
+        """
+    return GibbsParameter(value=value, conditional_posterior=ss.gamma.rvs, 
+                            posterior_params=lambda **kwargs : _rt_params(index=index, **kwargs))
