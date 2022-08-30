@@ -216,13 +216,13 @@ def _rt_params(index=None, **kwargs):
 
     unsorted_indicies = [int(k[len('data_'):]) for k in params.keys() if k.startswith('data_')]
     data_indicies = [k for k in sorted(unsorted_indicies)]
-    data_values = []; gamma_values = []
+    truth_values = []; gamma_values = []
 
     for i in data_indicies[window_start:index]:
-        data_values.append(params['data_' + str(i)])
+        truth_values.append(params['truth_' + str(i)])
         gamma_values.append(_calculate_gamma(params, i))
 
-    gamma_params = {'a': params['rt_prior_alpha'] + sum(data_values),
+    gamma_params = {'a': params['rt_prior_alpha'] + sum(truth_values),
                    'scale': 1 / (params['rt_prior_beta'] + sum(gamma_values))
                    }  # scale is inverse of beta value
     
