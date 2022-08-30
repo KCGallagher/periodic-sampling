@@ -28,7 +28,7 @@ class MixedSampler:
 
 
     def sampling_routine(self, step_num, sample_period = 1,
-                         sample_burnin = 0, random_order = False):
+                         sample_burnin = 0, random_order = False, chain_num = None):
         """Conducts repeated sampling iterations using either the Gibbs or 
         Metropolis-Hastings methods.
         
@@ -45,6 +45,9 @@ class MixedSampler:
         random_order : bool
             Where to update Parameters in a random order, or simply use
             the order in which they were listed in the dictionary
+        chain_num : int
+            If this is specified, will record the chain number in output 
+            Dataframe for use in analysis
         """
         metropolis = MetropolisSampler(self.params)
         gibbs = GibbsSampler(self.params)
@@ -65,5 +68,7 @@ class MixedSampler:
                     row[key] = gibbs.single_sample(key)
                     self.params[key].value = row[key]
             if (((n + 1) > sample_burnin) & ((n + 1) % sample_period == 0)):
+                if chain_num is not None:
+                    row['Chain'] = chain_num
                 history.append(row)
         return pd.DataFrame(history)
