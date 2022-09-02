@@ -58,8 +58,9 @@ def _truth_loglikelihood(params, index, value):
     """
     if ('R_' + str(index)) in params:
         R_value = params['R_' + str(index)]
-    else:  # Use constant R value
-        R_value = params['R_t']
+    else:  # Find most recent R value
+        times = [name[2:] for name in params.keys() if name.startswith('R_')]
+        R_value = params['R_' + str(max(times))]
 
     prob_truth = _poisson_logpmf(k=value,
                                     mu=_calculate_gamma(params, index) * R_value)
@@ -218,15 +219,19 @@ def bias_parameter(value, index):
 
 #  --- R PARAMETERS (constant and variable R)---
 
-def _rt_params(index=None, **kwargs):
+def _rt_params(initial_index=None, final_index=None, **kwargs):
     """Parameters for the probability density function (pdf) for 
     a single (constant) reproductive number.
     
     Parameters
     ----------
-    index : int
-        Index of the timeseries to which this Rt value corresponds. Pass 'None' if
-        the R value is constant over time
+    initial_index : int
+        Initial index of timeseries to consider. Pass 'None' if
+        the R value is fixed over the simulation, or time varying.
+    final_index : int
+        Final index of timeseries to consider - given by the current index
+        of the timeseries in the case of time-varying Rt. Pass 'None' if
+        the R value is fixed over the time period.
     kwargs : Unpacked dict
         Unpacked collection of parameters objects
         
@@ -236,17 +241,19 @@ def _rt_params(index=None, **kwargs):
     """
     params = kwargs
 
-    if index is None:  # For constant R case - considers whole timeseries
+    if final_index is None:  # For single R0 case - considers whole timeseries
         window_start = 0
+    elif initial_index is not None:  # For constant Rt over between given indices
+        window_start = initial_index
     else:  # To compute params for a single index of a time varying Rt 
-        window_start = max(0, index-params['Rt_window'])  # Typically -7 for one week
-        index += 1  # So range includes current value
+        window_start = max(0, final_index-params['Rt_window'])  # Typically -7 for one week
+        final_index += 1  # So range includes current value
 
     unsorted_indicies = [int(k[len('data_'):]) for k in params.keys() if k.startswith('data_')]
     data_indicies = [k for k in sorted(unsorted_indicies)]
     truth_values = []; gamma_values = []
 
-    for i in data_indicies[window_start:index]:
+    for i in data_indicies[window_start:final_index]:
         truth_values.append(params['truth_' + str(i)])
         gamma_values.append(_calculate_gamma(params, i))
 
@@ -256,7 +263,7 @@ def _rt_params(index=None, **kwargs):
     
     return gamma_params
 
-def fixed_r_parameter(value):
+def single_r_parameter(value):
     """Parameters for the probability density function (pdf) for 
     a single (constant) reproductive number.
     
@@ -270,11 +277,28 @@ def fixed_r_parameter(value):
     GibbsParameter : Parameter object for constant reproductive number    
         """
     return GibbsParameter(value=value, conditional_posterior=ss.gamma.rvs, 
-                            posterior_params=lambda **kwargs : _rt_params(index=None, **kwargs))
+                            posterior_params=lambda **kwargs : _rt_params(final_index=None, **kwargs))
+
+def constant_r_parameter(value, start, end):
+    """Parameters for the probability density function (pdf) for 
+    a constant reproductive number between two indexes of a timeseries.
+    
+    Parameters
+    ----------
+    value : int
+        Initial value for this parameter object
+    
+    Returns
+    -------
+    GibbsParameter : Parameter object for constant reproductive number    
+        """
+    return GibbsParameter(value=value, conditional_posterior=ss.gamma.rvs, 
+                            posterior_params=lambda **kwargs : _rt_params(initial_index=start,
+                                                                          final_index=end, **kwargs))
 
 def rt_parameter(value, index):
     """Parameters for the probability density function (pdf) for 
-    a single (constant) reproductive number.
+    one index of the time-varying reproductive number.
     
     Parameters
     ----------
@@ -288,4 +312,4 @@ def rt_parameter(value, index):
     GibbsParameter : Parameter object for constant reproductive number    
         """
     return GibbsParameter(value=value, conditional_posterior=ss.gamma.rvs, 
-                            posterior_params=lambda **kwargs : _rt_params(index=index, **kwargs))
+                            posterior_params=lambda **kwargs : _rt_params(final_index=index, **kwargs))
