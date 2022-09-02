@@ -3,6 +3,7 @@
 # See `fixed_bias_sampler` or `variable_Rt_sampler` for derivations of functions included
 #
 
+import math
 import numpy as np
 import scipy.stats as ss
 
@@ -10,6 +11,34 @@ from sampling_methods import GibbsParameter
 
 
 #  --- TIMESERIES PARAMETERS ---
+
+def _ramanujan_approx(n):
+    """Approximation to log(n!) for large n to avoid integer overflow"""
+    if n==0:
+        return 0
+    return n*math.log(n) - n + math.log(n*(1+4*n*(1+2*n)))/6 + math.log(math.pi)/2
+
+def _poisson_logpmf(k, mu):
+    """Intended to replace `ss.poisson.logpmf`, giving a x4 speed increase.
+    Uses log(x**k) = k/log_x(e) and Ramanujan approximation for log(k!) to
+    handle large values of k.
+    
+    Parameters
+    ----------
+    k : float
+        Predicted number of events
+    mu : float 
+        Average number of events (mean of Poisson distribution)
+        
+    Returns
+    -------
+    float : Log of the pmf function
+    """
+    if mu == 0:
+        return -1e10  # Should be -inf but throws issues in sampling
+    if mu == 1:
+        return -mu
+    return (-mu + (k/math.log(math.e, mu)) - _ramanujan_approx(k))
 
 def _truth_loglikelihood(params, index, value):
     """The independant probability of a given value for a given index of truth time series.
@@ -31,14 +60,13 @@ def _truth_loglikelihood(params, index, value):
         R_value = params['R_' + str(index)]
     else:  # Use constant R value
         R_value = params['R_t']
-    
-    prob_truth = ss.poisson.logpmf(k=value,
-                                mu=_calculate_gamma(params, index) * R_value)
 
-    prob_measurement = ss.poisson.logpmf(k=params['data_' + str(index)],
-                                      mu=(params['bias_' + str(index % 7)].value 
-                                          * value))
-        # Assumes week starts on a monday, otherwise can convert later
+    prob_truth = _poisson_logpmf(k=value,
+                                    mu=_calculate_gamma(params, index) * R_value)
+
+    prob_measurement = _poisson_logpmf(k=params['data_' + str(index)],
+                                        mu=(params['bias_' + str(index % 7)].value 
+                                            * value))        
     return prob_truth + prob_measurement
 
 def _calculate_gamma(params, max_t):
