@@ -132,12 +132,12 @@ from periodic_model import truth_parameter, bias_parameter, rt_parameter
 
 # Simulate Renewal Model
 time_steps = 100; N_0 = 100; R0_diff = 0.2
-start_date = '01/01/2020'; bias_method = 'poisson'
+start_date = '01/01/2020'; bias_method = 'scale'
 bias = [0.5, 1.4, 1.2, 1.1, 1.1, 1.1, 0.6]  # Always given with monday first
 R0_list = ([1.0 + R0_diff] * int(time_steps/2)) + ([1.0 - R0_diff] * int(time_steps/2))
 
-seeds = list(range(10)); output = pd.DataFrame()
-step_num = 140
+seeds = list(range(4)); output = pd.DataFrame()
+step_num = 20
 
 for seed in seeds:
     np.random.seed(41)
@@ -175,7 +175,7 @@ for seed in seeds:
 
     sampler = MixedSampler(params=params)
     output = pd.concat([output, sampler.sampling_routine(step_num=step_num,
-                                                         sample_burnin=20,
+                                                         sample_burnin=0,
                                                          chain_num=seed)],
                         axis=0)
     
