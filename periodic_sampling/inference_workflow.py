@@ -184,30 +184,27 @@ output1 = pd.DataFrame()
 
 output1 = pd.read_csv('data/outputs/stepped_R/multichain/fixed_r_stage/step1_fixed_inference_T_scale_100_N0_100_R0diff_0.2_It_500_seeds_6.csv')
 
+np.random.seed(41)
+model = RenewalModel()
+model.simulate(T=time_steps, N_0=N_0, R_0=R0_list)
+rep = Reporter(model.case_data, start_date=start_date) 
+
+bias_df = rep.fixed_bias_report(bias=bias, method=bias_method)
+I_data = list(bias_df['Confirmed'])
+
 seeds = list(range(4)); 
-step_num = int(1e6)
+step_num = int(300)
 output2 = pd.DataFrame()
 
 input = output1.mean()
 for seed_i, seed in enumerate(seeds):
-    np.random.seed(41)
-    model = RenewalModel()
-    model.simulate(T=time_steps, N_0=N_0, R_0=R0_list)
-
-    # Report unbiased and biased data
-    rep = Reporter(model.case_data, start_date=start_date) 
-
-    truth_df = rep.unbiased_report()
-    bias_df = rep.fixed_bias_report(bias=bias, method=bias_method)
-
-    np.random.seed(seed)
-    I_data = list(bias_df['Confirmed'])
+    np.random.seed(seed+10)
 
     params = {'bias_prior_alpha': 1, 'bias_prior_beta': 1,
             'rt_prior_alpha': 1, 'rt_prior_beta': 1}  # Gamma dist
 
     params['serial_interval'] = RenewalModel(R0=None).serial_interval
-    params['Rt_window'] = 7  # Assume it is constant for 7 days
+    params['Rt_window'] = 1  # Assume it is constant for 7 days
 
     for i, val in enumerate(I_data):  # Observed cases - not a Parameter
         params[("data_" + str(i))] = val
