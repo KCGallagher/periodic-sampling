@@ -9,12 +9,14 @@ import pandas as pd
 class GibbsParameter(float):
     """Parameter object for Gibbs sampler.
     """
-    def __new__(cls, value, conditional_posterior, posterior_params = None):
+    def __new__(cls, value, conditional_posterior, posterior_params = None,
+                sampling_freq = 1):
         """Inherits from float class, so instances of Parameter will be treated as a
         float (of value self.value) in all arithmetic operations."""
         return super(GibbsParameter, cls).__new__(cls, value)
 
-    def __init__(self, value, conditional_posterior, posterior_params = None):
+    def __init__(self, value, conditional_posterior, posterior_params = None,
+                 sampling_freq = 1):
         """Constructor method of parameter object.
         
         Parameters
@@ -27,10 +29,14 @@ class GibbsParameter(float):
             Function object that generates parameters for the conditional_
             posterior method - returns a dictionary. Optional - if not specified,
             the params dict will be fed directly into the conditional posterior
+        sampling_freq : int
+            Will sample this parameter 1 in every 'sampling_freq' iterations - 
+            defaults to unity (i.e. sampling every iteration)
         """
         self.value = value
         self.conditional_posterior = conditional_posterior
         self.posterior_params = posterior_params
+        self.sampling_freq = sampling_freq
 
     def __str__(self) -> str:
         """String representation of object.
@@ -134,7 +140,8 @@ class GibbsSampler:
             random.shuffle(list(params.keys()))
             for key in list(params.keys()):
                 if isinstance(params[key], GibbsParameter):
-                    row[key] = self.single_sample(key)
+                    if n % params[key].sampling_freq == 0:
+                        row[key] = self.single_sample(key)
             if ((n >= sample_burnin) & (n % sample_period == 0)):
                 history.append(row)
         return pd.DataFrame(history)

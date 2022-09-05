@@ -139,7 +139,7 @@ def _timeseries_truth_sample(params, index):
     index = _categorical_log(weights)
     return values[index]
 
-def truth_parameter(value, index):
+def truth_parameter(value, index, sampling_freq = 1):
     """Creates parameter object for a single data point of known index 
     in truth array. 
 
@@ -153,12 +153,15 @@ def truth_parameter(value, index):
         Index of timeseries to generate a parameter for
     value : int
         Initial value for this parameter object
+    sampling_freq : int
+        Will sample this parameter 1 in every 'sampling_freq' iterations - 
+        defaults to unity (i.e. sampling every iteration)
         
     Returns
     -------
     GibbsParameter : Parameter object for given index of timeseries
     """
-    param = GibbsParameter(value=value, conditional_posterior=None)
+    param = GibbsParameter(value=value, conditional_posterior=None, sampling_freq=sampling_freq)
     # overwrite sampling method for parameter to use independant sampling
     param.sample = lambda params : _timeseries_truth_sample(params, index=index)
     return param
@@ -197,7 +200,7 @@ def _bias_pdf_params(index, **kwargs):
     
     return gamma_params
 
-def bias_parameter(value, index):
+def bias_parameter(value, index, sampling_freq = 1):
     """Creates Gibbs parameter object, with a gamma posterior derived
     using conjugate priors above. Function object is created for the
     correct index, and can be passed the unpacked params dictionary.
@@ -208,13 +211,16 @@ def bias_parameter(value, index):
         Index of bias vector to generate the pdf for
     value : int
         Initial value for this parameter object
+    sampling_freq : int
+        Will sample this parameter 1 in every 'sampling_freq' iterations - 
+        defaults to unity (i.e. sampling every iteration)
         
     Returns
     -------
     GibbsParameter : Parameter object for given index of bias vector
     """
     return GibbsParameter(
-        value=value, conditional_posterior=ss.gamma.rvs,
+        value=value, conditional_posterior=ss.gamma.rvs, sampling_freq=sampling_freq,
         posterior_params = lambda **kwargs : _bias_pdf_params(index=index, value=value, **kwargs))
 
 #  --- R PARAMETERS (constant and variable R)---
@@ -263,7 +269,7 @@ def _rt_params(initial_index=None, final_index=None, **kwargs):
     
     return gamma_params
 
-def single_r_parameter(value):
+def single_r_parameter(value, sampling_freq = 1):
     """Parameters for the probability density function (pdf) for 
     a single (constant) reproductive number.
     
@@ -271,15 +277,18 @@ def single_r_parameter(value):
     ----------
     value : int
         Initial value for this parameter object
+    sampling_freq : int
+        Will sample this parameter 1 in every 'sampling_freq' iterations - 
+        defaults to unity (i.e. sampling every iteration)
     
     Returns
     -------
     GibbsParameter : Parameter object for constant reproductive number    
         """
-    return GibbsParameter(value=value, conditional_posterior=ss.gamma.rvs, 
+    return GibbsParameter(value=value, conditional_posterior=ss.gamma.rvs, sampling_freq=sampling_freq,
                             posterior_params=lambda **kwargs : _rt_params(final_index=None, **kwargs))
 
-def constant_r_parameter(value, start, end):
+def constant_r_parameter(value, start, end, sampling_freq = 1):
     """Parameters for the probability density function (pdf) for 
     a constant reproductive number between two indexes of a timeseries.
     
@@ -287,16 +296,19 @@ def constant_r_parameter(value, start, end):
     ----------
     value : int
         Initial value for this parameter object
+    sampling_freq : int
+        Will sample this parameter 1 in every 'sampling_freq' iterations - 
+        defaults to unity (i.e. sampling every iteration)
     
     Returns
     -------
     GibbsParameter : Parameter object for constant reproductive number    
         """
-    return GibbsParameter(value=value, conditional_posterior=ss.gamma.rvs, 
+    return GibbsParameter(value=value, conditional_posterior=ss.gamma.rvs, sampling_freq=sampling_freq,
                             posterior_params=lambda **kwargs : _rt_params(initial_index=start,
                                                                           final_index=end, **kwargs))
 
-def rt_parameter(value, index):
+def rt_parameter(value, index, sampling_freq = 1):
     """Parameters for the probability density function (pdf) for 
     one index of the time-varying reproductive number.
     
@@ -306,10 +318,13 @@ def rt_parameter(value, index):
         Initial value for this parameter object
     index : int
         Index of the timeseries to which this Rt value corresponds
+    sampling_freq : int
+        Will sample this parameter 1 in every 'sampling_freq' iterations - 
+        defaults to unity (i.e. sampling every iteration)
     
     Returns
     -------
     GibbsParameter : Parameter object for constant reproductive number    
         """
-    return GibbsParameter(value=value, conditional_posterior=ss.gamma.rvs, 
-                            posterior_params=lambda **kwargs : _rt_params(final_index=index, **kwargs))
+    return GibbsParameter(value=value, conditional_posterior=ss.gamma.rvs, sampling_freq=sampling_freq,
+                          posterior_params=lambda **kwargs : _rt_params(final_index=index, **kwargs))

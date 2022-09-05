@@ -60,13 +60,15 @@ class MixedSampler:
                 random.shuffle(list(params.keys()))
             for key in list(params.keys()):
                 if isinstance(params[key], MetropolisParameter):
-                    metropolis.params = self.params  # Resync with global params
-                    row[key] = metropolis.single_sample(key)
-                    self.params[key].value = row[key]  # Update global params
+                    if n % params[key].sampling_freq == 0:
+                        metropolis.params = self.params  # Resync with global params
+                        row[key] = metropolis.single_sample(key)
+                        self.params[key].value = row[key]  # Update global params
                 elif isinstance(params[key], GibbsParameter):
-                    gibbs.params = self.params
-                    row[key] = gibbs.single_sample(key)
-                    self.params[key].value = row[key]
+                    if n % params[key].sampling_freq == 0:
+                        gibbs.params = self.params
+                        row[key] = gibbs.single_sample(key)
+                        self.params[key].value = row[key]
             if (((n + 1) > sample_burnin) & ((n + 1) % sample_period == 0)):
                 if chain_num is not None:
                     row['Chain'] = chain_num
