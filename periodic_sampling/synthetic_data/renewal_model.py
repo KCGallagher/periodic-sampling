@@ -81,9 +81,9 @@ class RenewalModel():
         omega = self.serial_interval
         cases = [N_0 / omega[1]]  # Scale N_0 to account for missing history
         for t in tqdm(range(1, T + 1), disable = not display_progress):
-            n_terms_gamma = min(t + 1, len(omega))  # Number of terms in sum for gamma
-            gamma = sum([omega[i] * cases[-i] for i in range(1, n_terms_gamma)])
-            cases.append(np.random.poisson(R_0[t-1] * gamma))
+            n_terms_lambda = min(t + 1, len(omega))  # Number of terms in sum for lambda
+            lambda_val = sum([omega[i] * cases[-i] for i in range(1, n_terms_lambda)])
+            cases.append(np.random.poisson(R_0[t-1] * lambda_val))
         self.case_data = pd.DataFrame(cases[1:], columns = ['Cases'])
 
     def plot(self, save_loc = None):

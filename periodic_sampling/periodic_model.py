@@ -3,6 +3,7 @@
 # See `fixed_bias_sampler` or `variable_Rt_sampler` for derivations of functions included
 #
 
+from ast import Lambda
 import math
 import numpy as np
 import scipy.stats as ss
@@ -63,23 +64,23 @@ def _truth_loglikelihood(params, index, value):
         R_value = params['R_' + str(max(times))]
 
     prob_truth = _poisson_logpmf(k=value,
-                                    mu=_calculate_gamma(params, index) * R_value)
+                                    mu=_calculate_lambda(params, index) * R_value)
 
     prob_measurement = _poisson_logpmf(k=params['data_' + str(index)],
                                         mu=(params['bias_' + str(index % 7)].value 
                                             * value))        
     return prob_truth + prob_measurement
 
-def _calculate_gamma(params, max_t):
-    """Historic gamma factor for a given index of data series. For more detailed
-    description of the gamma factor, see `renewal_model.py`.
+def _calculate_lambda(params, max_t):
+    """Historic lambda factor for a given index of data series. For more detailed
+    description of the lambda factor, see `renewal_model.py`.
     
     Parameters
     ----------
     params : Dict
         Dictionary object for all inference variables and associated parameters
     max_t : int
-        Maximum index of timeseries to calculate gamma up to
+        Maximum index of timeseries to calculate lambda up to
         
     Returns
     -------
@@ -89,10 +90,10 @@ def _calculate_gamma(params, max_t):
         return (params['data_0'] / params['bias_0'])  # Best guess of initial point
     omega = params['serial_interval']
     cases = [params[k] for k in params.keys() if k.startswith('data_')]
-    n_terms_gamma = min(max_t + 1, len(omega))  # Number of terms in sum for gamma
+    n_terms_lambda = min(max_t + 1, len(omega))  # Number of terms in sum for lambda
     if max_t < len(omega):
-        omega = omega / sum(omega[:n_terms_gamma])
-    return sum([omega[i] * cases[max_t - i] for i in range(1, n_terms_gamma)])
+        omega = omega / sum(omega[:n_terms_lambda])
+    return sum([omega[i] * cases[max_t - i] for i in range(1, n_terms_lambda)])
 
 def _categorical_log(log_p):
     """Generate one sample from a categorical distribution with event
@@ -166,11 +167,12 @@ def truth_parameter(value, index, sampling_freq = 1):
     param.sample = lambda params : _timeseries_truth_sample(params, index=index)
     return param
 
-#  --- BIAS PARAMETERS ---
+#  --- POISSON BIAS PARAMETERS ---
 
-def _bias_pdf_params(index, **kwargs):
+def _poisson_bias_pdf_params(index, **kwargs):
     """Parameters for the probability density function (pdf) for 
-    a given index of the bias vector.
+    a given index of the bias vector, based on a poisson noise model
+    (C_t = Po(alpha_t * I_t)).
     
     Parameters
     ----------
@@ -200,7 +202,7 @@ def _bias_pdf_params(index, **kwargs):
     
     return gamma_params
 
-def bias_parameter(value, index, sampling_freq = 1):
+def poisson_bias_parameter(value, index, sampling_freq = 1):
     """Creates Gibbs parameter object, with a gamma posterior derived
     using conjugate priors above. Function object is created for the
     correct index, and can be passed the unpacked params dictionary.
@@ -221,7 +223,69 @@ def bias_parameter(value, index, sampling_freq = 1):
     """
     return GibbsParameter(
         value=value, conditional_posterior=ss.gamma.rvs, sampling_freq=sampling_freq,
-        posterior_params = lambda **kwargs : _bias_pdf_params(index=index, value=value, **kwargs))
+        posterior_params = lambda **kwargs : _poisson_bias_pdf_params(index=index, value=value, **kwargs))
+
+#  --- SCALE BIAS PARAMETERS ---
+
+def _scale_bias_pdf_params(index, **kwargs):
+    """Parameters for the probability density function (pdf) for 
+    a given index of the bias vector, based on a scale noise model
+    (deterministic scaling of cases with C_t = alpha_t * I_t)
+    
+    Parameters
+    ----------
+    index : int
+        Index of bias vector to generate the pdf for
+    kwargs : Unpacked dict
+        Unpacked collection of parameters objects
+        
+    Returns
+    -------
+    dict : Parameters for the conditional posterior used in sampling
+    """
+    params = kwargs
+
+    unsorted_indicies = [int(k[len('data_'):]) for k in params.keys() if k.startswith('data_')]
+    data_indicies = [k for k in sorted(unsorted_indicies)]
+    R_Lambda_values = []; data_values = []
+
+    for i in data_indicies:
+        if int(i) % 7 == index:
+            data_values.append(params['data_' + str(i)])
+            Lambda_val = _calculate_lambda(params, max_t=i)
+            R_Lambda_values.append(params['R_' + str(i)] * Lambda_val)
+
+
+    gamma_params = {'a': params['bias_prior_alpha'] + sum(data_values),
+                   'scale': 1 / (params['bias_prior_beta'] + sum(R_Lambda_values))
+                   }  # scale is inverse of beta value
+    
+    return gamma_params
+
+def scale_bias_parameter(value, index, sampling_freq = 1):
+    """Creates Gibbs parameter object, with a gamma posterior derived
+    using conjugate priors above. Function object is created for the
+    correct index, and can be passed the unpacked params dictionary.
+
+    Should only be used with a variable Rt setup.
+    
+    Parameters
+    ----------
+    index : int
+        Index of bias vector to generate the pdf for
+    value : int
+        Initial value for this parameter object
+    sampling_freq : int
+        Will sample this parameter 1 in every 'sampling_freq' iterations - 
+        defaults to unity (i.e. sampling every iteration)
+        
+    Returns
+    -------
+    GibbsParameter : Parameter object for given index of bias vector
+    """
+    return GibbsParameter(
+        value=value, conditional_posterior=ss.gamma.rvs, sampling_freq=sampling_freq,
+        posterior_params = lambda **kwargs : _scale_bias_pdf_params(index=index, value=value, **kwargs))
 
 #  --- R PARAMETERS (constant and variable R)---
 
@@ -260,8 +324,12 @@ def _rt_params(initial_index=None, final_index=None, **kwargs):
     truth_values = []; gamma_values = []
 
     for i in data_indicies[window_start:final_index]:
-        truth_values.append(params['truth_' + str(i)])
-        gamma_values.append(_calculate_gamma(params, i))
+        gamma_values.append(_calculate_lambda(params, i))
+        try:
+            truth_values.append(params['truth_' + str(i)])
+        except KeyError:
+            truth_values.append(int(params['data_' + str(i)]
+                                    / params['bias_' + str(i % 7)]))
 
     gamma_params = {'a': params['rt_prior_alpha'] + sum(truth_values),
                    'scale': 1 / (params['rt_prior_beta'] + sum(gamma_values))

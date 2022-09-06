@@ -20,7 +20,7 @@ plt.rcParams['font.size'] = '12'
 
 from synthetic_data import RenewalModel, Reporter
 from sampling_methods import GibbsParameter, MixedSampler
-from periodic_model import truth_parameter, bias_parameter, rt_parameter
+from periodic_model import truth_parameter, poisson_bias_parameter, rt_parameter
 
 
 
@@ -55,7 +55,7 @@ from periodic_model import truth_parameter, bias_parameter, rt_parameter
 #     params[("truth_" + str(i))] = truth_parameter(data_initial_guess, index=i)
 
 # for i in range(7):  # Weekday bias parameters
-#     params[("bias_" + str(i))] = bias_parameter(1, index=i)
+#     params[("bias_" + str(i))] = poisson_bias_parameter(1, index=i)
 
 # step_num = 2
 # sampler = MixedSampler(params=params)
@@ -104,7 +104,7 @@ from periodic_model import truth_parameter, bias_parameter, rt_parameter
 #         params[("truth_" + str(i))] = truth_parameter(data_initial_guess, index=i)
 
 #     for i in range(7):  # Weekday bias parameters
-#         params[("bias_" + str(i))] = bias_parameter(1, index=i)
+#         params[("bias_" + str(i))] = poisson_bias_parameter(1, index=i)
 
 #     sampler = MixedSampler(params=params)
 #     output = pd.concat([output, sampler.sampling_routine(step_num=step_num, sample_burnin=1)], axis=0)
@@ -163,7 +163,7 @@ for seed in seeds:
         params[("truth_" + str(i))] = truth_parameter(data_initial_guess, index=i, sampling_freq=2000)
 
     for i in range(7):  # Weekday bias parameters
-        params[("bias_" + str(i))] = bias_parameter(value=2 * np.random.random(), index=i)
+        params[("bias_" + str(i))] = poisson_bias_parameter(value=2 * np.random.random(), index=i)
 
     for i in range(0, len(I_data)):  # Reproductive number values
         params[("R_" + str(i))] = rt_parameter(value=1, index=i)
