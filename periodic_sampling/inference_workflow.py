@@ -144,8 +144,8 @@ rep = Reporter(model.case_data, start_date=start_date)
 bias_df = rep.fixed_bias_report(bias=bias, method=bias_method)
 I_data = list(bias_df['Confirmed'])
 
-seeds = list(range(2)); output = pd.DataFrame()
-step_num = 6
+seeds = list(range(4)); output = pd.DataFrame()
+step_num = int(1e5)
 output1 = pd.DataFrame()
 
 for seed in seeds:
@@ -160,7 +160,7 @@ for seed in seeds:
 
     data_initial_guess = sum(I_data)/len(I_data)  # Constant initial value
     for i in range(0, len(I_data)):  # Ground truth data
-        params[("truth_" + str(i))] = truth_parameter(data_initial_guess, index=i, sampling_freq=2)
+        params[("truth_" + str(i))] = truth_parameter(data_initial_guess, index=i, sampling_freq=2000)
 
     for i in range(7):  # Weekday bias parameters
         params[("bias_" + str(i))] = bias_parameter(value=2 * np.random.random(), index=i)
