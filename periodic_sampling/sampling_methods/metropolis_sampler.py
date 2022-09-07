@@ -16,7 +16,7 @@ class MetropolisParameter(float):
         float (of value self.value) in all arithmetic operations."""
         return super(MetropolisParameter, cls).__new__(cls, value)
 
-    def __init__(self, value, step_size, prior, likelihood):
+    def __init__(self, value, step_size, prior, likelihood, sampling_freq = 1):
         """Constructor method of parameter object.
         
         Parameters
@@ -33,12 +33,15 @@ class MetropolisParameter(float):
             Function object that returns pdf from likelihood distribution - 
             should be a lambda function that only requires value of parameter
             (i.e. other arguments for the prior distribution are preloaded.)
-
+        sampling_freq : int
+            Will sample this parameter 1 in every 'sampling_freq' iterations - 
+            defaults to unity (i.e. sampling every iteration)
         """
         self.value = value
         self.step_size = step_size
         self.prior = prior
         self.likelihood = likelihood
+        self.sampling_freq = sampling_freq
 
         # Default proposal functions - can be redefined for Metropolis Hastings
 
@@ -155,7 +158,8 @@ class MetropolisSampler:
             row = {}
             for key in list(params.keys()):
                 if isinstance(params[key], MetropolisParameter):
-                    row[key] = self.single_sample(key)
+                    if n % params[key].sampling_freq == 0:
+                        row[key] = self.single_sample(key)
             if ((n >= sample_burnin) & (n % sample_period == 0)):
                 history.append(row)
         return pd.DataFrame(history)
