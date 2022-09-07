@@ -255,7 +255,6 @@ def _scale_bias_pdf_params(index, **kwargs):
             Lambda_val = _calculate_lambda(params, max_t=i)
             R_Lambda_values.append(params['R_' + str(i)] * Lambda_val)
 
-
     gamma_params = {'a': params['bias_prior_alpha'] + sum(data_values),
                    'scale': 1 / (params['bias_prior_beta'] + sum(R_Lambda_values))
                    }  # scale is inverse of beta value
