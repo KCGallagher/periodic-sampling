@@ -69,8 +69,17 @@ class MixedSampler:
                         gibbs.params = self.params
                         row[key] = gibbs.single_sample(key)
                         self.params[key].value = row[key]
+
+            bias_sum = sum([row[key] for key in params.keys() if (key.startswith('bias_') and not key.startswith('bias_prior'))])
+            for key in list(params.keys()):
+                if key.startswith('bias_') and not key.startswith('bias_prior'):
+                    row[key] /= (bias_sum / 7)
+                    self.params[key].value = row[key]
+
+
             if (((n + 1) > sample_burnin) & ((n + 1) % sample_period == 0)):
                 if chain_num is not None:
                     row['Chain'] = chain_num
                 history.append(row)
+
         return pd.DataFrame(history)
