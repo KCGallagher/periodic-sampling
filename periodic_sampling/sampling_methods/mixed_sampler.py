@@ -69,8 +69,33 @@ class MixedSampler:
                         gibbs.params = self.params
                         row[key] = gibbs.single_sample(key)
                         self.params[key].value = row[key]
+
+            # bias_sum = sum([row[key] for key in params.keys() if (key.startswith('bias_') and not key.startswith('bias_prior'))])
+            
+            # Post-Hoc nromalisation
+            # for key in list(params.keys()):
+            #     if key.startswith('bias_') and not key.startswith('bias_prior'):
+            #         row[key] /= (bias_sum / 7)
+            #         self.params[key].value = row[key]
+
+            # Final value adjustment
+            # random_bias = 'bias_' + str(random.randint(0, 6))
+            # row[random_bias] = max(0.01, 7 - (bias_sum - row[random_bias]))
+            # self.params[random_bias].value = row[random_bias]
+
+            # Forced resampling
+            # while abs(bias_sum - 7) > params['error_threshold_bias']: 
+            #     for key in list(params.keys()):
+            #         if isinstance(params[key], GibbsParameter):  # resample both bias and Rt 
+            #             gibbs.params = self.params
+            #             row[key] = gibbs.single_sample(key)
+            #             self.params[key].value = row[key]
+            #     bias_sum = sum([row[key] for key in params.keys() if (key.startswith('bias_') and not key.startswith('bias_prior'))])
+
+
             if (((n + 1) > sample_burnin) & ((n + 1) % sample_period == 0)):
                 if chain_num is not None:
                     row['Chain'] = chain_num
                 history.append(row)
+
         return pd.DataFrame(history)
