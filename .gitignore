@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 
+# Packaging files
+periodic_sampling.egg-info
+
 # Jupyter Notebook checkpoints
 */.ipynb_checkpoints
 
