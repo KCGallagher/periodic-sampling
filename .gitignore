@@ -19,3 +19,7 @@ data/*/
 *.prof
 *.lprof
 
+# Build dir for stan
+build
+stan_inference/build
+
