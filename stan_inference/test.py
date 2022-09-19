@@ -27,14 +27,22 @@ bias_df = rep.fixed_bias_report(bias=bias, method=bias_method)
 with open("stan_inference/fixed_bias_example.stan") as f:
     fixed_bias_code = f.read()
 
+c_val = list(bias_df['Confirmed'])
+
 fixed_bias_data = {
-    "C": list(bias_df['Confirmed']),
+    "time_steps": len(c_val),
+    "C": c_val,
     "R": 0.99,
-    "serial_interval": RenewalModel(R0=None).serial_interval
+    "serial_interval": RenewalModel(R0=None).serial_interval,
 }
 
 posterior = stan.build(fixed_bias_code, data=fixed_bias_data, random_seed=1) 
-fit = posterior.sample(num_chains=4, num_samples=10)
+
+bias_init_val = [1.0 for _ in range(7)]
+chain_num = 1
+init_values = [{'alpha': bias_init_val} for _ in range(chain_num)]  # List of dict for each chain
+
+fit = posterior.sample(num_chains=chain_num, num_samples=100, num_warmup=20)#, init=init_values)
 df = fit.to_frame()
 print(df.describe().T)
 
