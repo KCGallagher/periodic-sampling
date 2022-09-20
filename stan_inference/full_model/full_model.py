@@ -33,7 +33,7 @@ c_val = list(bias_df['Confirmed'])
 fixed_bias_data = {
     "time_steps": len(c_val),
     "C": c_val,
-    "Rt_window": 7,
+    "Rt_window": 2,
     "serial_interval": RenewalModel(R0=None).serial_interval,
     "alpha_prior": [1 for _ in range(7)]  # larger val -> tighter dist
 }
@@ -41,10 +41,10 @@ fixed_bias_data = {
 posterior = stan.build(fixed_bias_code, data=fixed_bias_data, random_seed=1) 
 
 chain_num = 4
-sample_num = int(1e4)
+sample_num = int(5e3)
 bias_init_val = [1/7 for _ in range(7)]  # ((i+1)/28) for simplex step
 rt_init_val = [1 for _ in range(fixed_bias_data['time_steps'])]
-init_values = [{'alpha': bias_init_val, 'Rt': rt_init_val} for _ in range(chain_num)] 
+init_values = [{'alpha': bias_init_val, 'R': rt_init_val} for _ in range(chain_num)] 
 
 fit = posterior.sample(num_chains=chain_num, num_samples=sample_num, 
                        num_thin=int(1e1),

@@ -12,20 +12,21 @@ functions {
             return value_2;
         }
     }
-    real calculate_lambda(vector alpha, array[] int C, vector omega, int max_t) {
+    real calculate_lambda(vector alpha, array[] real I, vector omega, int max_t) {
             if (max_t == 1)
-                return C[1];
+                return I[1];
             int n_terms_lambda = min_of_int_pair(max_t, size(omega) - 1);  // Number of terms in sum for lambda
 
             vector[size(omega)] temp_omega;
-            if (max_t < size(omega))
-                temp_omega = omega ./ sum(omega[:n_terms_lambda]);
+            if (max_t < size(omega)) {
+                temp_omega = omega ./ sum(omega[:n_terms_lambda+1]);
+            }
             else {
                 temp_omega = omega;
             }
             real total = 0;
             for(i in 1:n_terms_lambda) {
-                total += (temp_omega[i+1] * C[max_t - i + 1]);
+                total += (temp_omega[i+1] * I[max_t - i + 1]);
             }
             return total;
     }
@@ -36,6 +37,12 @@ data {
     array[time_steps] int<lower=0> C;  // Length of biased timeseries must be known at compile time
     vector[20] serial_interval;  // 20 unit vectors generated in renewal_model.py
     vector[7] alpha_prior;
+}
+transformed data {
+   array[time_steps] real I_prior_stdev;
+   for(i in 1:time_steps){
+       I_prior_stdev[i] = floor(sqrt(C[i]));
+   }
 }
 parameters {
     simplex[7] alpha;
@@ -58,7 +65,7 @@ model {
         }
 
         for(j in 1:window_width){
-            real mu = R[i] * calculate_lambda(alpha, C, serial_interval, i-(j-1));
+            real mu = R[i] * calculate_lambda(alpha, I, serial_interval, i-(j-1));
             I[i-(j-1)] ~ normal(mu, sqrt(mu));
         }
         // P(C_t | a_i, I_t) - Reporting Process
