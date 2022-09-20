@@ -50,6 +50,5 @@ df = fit.to_frame()
 df = df[df.columns.drop([c for c in df.columns if c.startswith('alpha')])]
 print(df.describe().T)
 
-# Increasing dirichlet prior to 1e6 does decrease sample variance, but no chane for sensible values
-# No observable chance from bias_init_values
-# Is step_size too small? Not sure if I can change that with NUTS?
+# Increasing dirichlet prior to 1e6 does decrease sample variance, but no change for sensible values
+# No observable change from bias_init_values
