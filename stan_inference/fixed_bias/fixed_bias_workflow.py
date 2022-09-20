@@ -22,7 +22,7 @@ rep = Reporter(model.case_data, start_date=start_date)  # Start on Mon 6th for e
 truth_df = rep.unbiased_report()
 bias_df = rep.fixed_bias_report(bias=bias, method=bias_method)
 
-with open("stan_inference/dirichlet_bias_example.stan") as f:
+with open("stan_inference/fixed_bias/dirichlet_bias_example.stan") as f:
     fixed_bias_code = f.read()
 
 c_val = list(bias_df['Confirmed'])

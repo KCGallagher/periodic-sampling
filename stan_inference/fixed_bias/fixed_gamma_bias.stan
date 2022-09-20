@@ -1,3 +1,5 @@
+// Model with a fixed reporting bias based on a gamma prior, with known constant R0
+
 functions {
     int min_of_int_pair(int value_1, int value_2) {
         if (value_1 < value_2)
