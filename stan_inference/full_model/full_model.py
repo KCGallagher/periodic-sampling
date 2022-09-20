@@ -10,7 +10,7 @@ from periodic_sampling.synthetic_data import RenewalModel, Reporter
 
 # Simulate Renewal Model
 time_steps = 100; N_0 = 100; seed=41; R0_diff = 0.2
-start_date = '01/01/2020'; bias_method = 'scale'
+start_date = '01/01/2020'; bias_method = 'poisson'
 
 bias = [0.5, 1.4, 1.2, 1.1, 1.1, 1.1, 0.6]  # Always given with monday first
 R0_list = ([1.0 + R0_diff] * int(time_steps/2)) + ([1.0 - R0_diff] * int(time_steps/2))
@@ -41,13 +41,13 @@ fixed_bias_data = {
 posterior = stan.build(fixed_bias_code, data=fixed_bias_data, random_seed=1) 
 
 chain_num = 4
-sample_num = int(5e3)
+sample_num = int(1e5)
 bias_init_val = [1/7 for _ in range(7)]  # ((i+1)/28) for simplex step
 rt_init_val = [1 for _ in range(fixed_bias_data['time_steps'])]
 init_values = [{'alpha': bias_init_val, 'R': rt_init_val} for _ in range(chain_num)] 
 
 fit = posterior.sample(num_chains=chain_num, num_samples=sample_num, 
-                       num_thin=int(1e1),
+                       num_thin=int(5e1),
                        init=init_values,
                        )
 df = fit.to_frame()
