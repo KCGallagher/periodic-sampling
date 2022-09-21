@@ -7,12 +7,9 @@
 import pandas as pd
 from uk_covid19 import Cov19API
 
-def retrieve_data():
+def retrieve_data(area_name, area_type):
   """Get the Covid data via the API"""
-  try:
-    area_name = 'england'
-    area_type = 'nation'
-    
+  try:  
     location_filter = [f'areaType={area_type}',
     f'areaName={area_name}']
 
@@ -23,7 +20,8 @@ def retrieve_data():
         "newCasesByPublishDate": "newCasesByPublishDate",
         "newCasesBySpecimenDate": "newCasesBySpecimenDate",
         "newDeaths28DaysByDeathDate": "newDeaths28DaysByDeathDate",
-        "newDeaths28DaysByPublishDate": "newDeaths28DaysByPublishDate"
+        "newDeaths28DaysByPublishDate": "newDeaths28DaysByPublishDate",
+        "newVirusTestsBySpecimenDate": "newVirusTestsBySpecimenDate"
     }
 
     api = Cov19API(filters=location_filter, structure=req_structure)
@@ -36,5 +34,5 @@ def retrieve_data():
 
 
 if __name__ == "__main__":
-    data = retrieve_data()
+    data = retrieve_data(area_name='england', area_type='nation')
     pd.DataFrame(data).to_csv("UK_raw_data/uk_data.csv")
