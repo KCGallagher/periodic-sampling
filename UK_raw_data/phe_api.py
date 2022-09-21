@@ -21,8 +21,10 @@ def retrieve_data(area_name, area_type):
         "newCasesBySpecimenDate": "newCasesBySpecimenDate",
         "newDeaths28DaysByDeathDate": "newDeaths28DaysByDeathDate",
         "newDeaths28DaysByPublishDate": "newDeaths28DaysByPublishDate",
-        "newVirusTestsBySpecimenDate": "newVirusTestsBySpecimenDate"
-    }
+        "newVirusTestsBySpecimenDate": "newVirusTestsBySpecimenDate",
+        "newCasesPCROnlyBySpecimenDate": "newCasesPCROnlyBySpecimenDate",
+        "newPCRTestsBySpecimenDate": "newPCRTestsBySpecimenDate"
+        }
 
     api = Cov19API(filters=location_filter, structure=req_structure)
 
