@@ -84,3 +84,34 @@ def kruskal_weekday_test(df, col):
     for i in range(7):
         weekday_df.append(df[df['Day_Index'] == i][col])
     return ss.kruskal(*weekday_df, nan_policy='omit')
+
+
+def multiple_comparisons_correction(p_vals, alpha=0.05):
+    """Uses the Benjamini-Hochberg procedure to combine the p values from
+    multiple independent null hypothesis test results.
+    
+    Parameters
+    ----------
+    p_vals : list
+        List of independent p values
+    alpha : float
+        Significance level (the probability of rejecting the 
+        null hypothesis when it is true)
+
+    Output
+    ------
+    list[bool] : Whether to accept H0 for each hypothesis (ordered)
+    """
+    sorted_vals = sorted(p_vals)
+    k = 0  # Number of null hypotheses to reject
+    for i in range(len(p_vals)):
+        if sorted_vals[i] <= ((i + 1) * alpha / len(p_vals)):
+            k = (i + 1)
+    
+    passed_H0 = [True for _ in range(len(p_vals))]
+    for n in range(k):
+        failed_test_index = p_vals.index(sorted_vals[n])
+        passed_H0[failed_test_index] = False
+        p_vals[failed_test_index] = None  # Prevent refinding this value in case of duplicates
+
+    return passed_H0
