@@ -55,7 +55,7 @@ def weekday_t_tests(df, col, p_vals = True):
     col : str
         Name of column in dataframe to consider
     p_vals : bool
-        Whether to return the p_vals or the t statistic (P_vals by defualt)
+        Whether to return the p_vals or the t statistic (True by defualt)
     """
     output_stats = []
     for i in range(7):
@@ -63,6 +63,32 @@ def weekday_t_tests(df, col, p_vals = True):
         if p_vals:
             output_stats[i] = _p_val(output_stats[i], len(df[df['Day_Index'] == i][col]) - 1)
     return output_stats
+
+
+def wilcoxon_signed_rank_test(df, col_1, col_2, p_vals = True):
+    """The Wilcoxon signed-rank test tests the null hypothesis that two related 
+    paired samples come from the same distribution. In particular, it tests 
+    whether the distribution of the differences x - y is symmetric about zero. 
+    It is a non-parametric version of the paired T-test.
+    
+    Parameters
+    ----------
+    df : pd.Dataframe
+        Dataframe, including col and 'Day_Index
+    col : str
+        Name of column in dataframe to consider
+    p_vals : bool
+        Whether to return the p_vals or the t statistic (True by defualt)
+    """
+    output_stats = []
+    for i in range(7):
+        output_stats.append(ss.wilcoxon(df[df['Day_Index'] == i][col_1],
+                                        df[df['Day_Index'] == i][col_2],
+                                        nan_policy='omit'))
+        if p_vals:
+            output_stats[i] = output_stats[i].pvalue
+    return output_stats
+
 
 
 def kruskal_weekday_test(df, col):
