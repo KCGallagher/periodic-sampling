@@ -30,7 +30,7 @@ def single_t_test(data, mu_0 = 1):
     s = np.std(data)
     return (x_bar - mu_0) / (s / np.sqrt(len(data)))
 
-def p_val(t_stat, dof):
+def _p_val(t_stat, dof):
     """Compute p value from t statistic and degrees of freedom
     for a 2-sided t- test.
     
@@ -61,5 +61,26 @@ def weekday_t_tests(df, col, p_vals = True):
     for i in range(7):
         output_stats.append(single_t_test(df[df['Day_Index'] == i][col]))
         if p_vals:
-            output_stats[i] = p_val(output_stats[i], len(df[df['Day_Index'] == i][col]) - 1)
+            output_stats[i] = _p_val(output_stats[i], len(df[df['Day_Index'] == i][col]) - 1)
     return output_stats
+
+
+def kruskal_weekday_test(df, col):
+    """The Kruskal-Wallis H-test tests the null hypothesis that the population
+    median for each weekday are equal for a named column of dataframe provided.
+    
+    Parameters
+    ----------
+    df : pd.Dataframe
+        Dataframe, including col and 'Day_Index
+
+    Returns
+    -------
+    float : The Kruskal-Wallis H statistic, corrected for ties.
+    float : The p-value for the test using the assumption that 
+            H has a chi square distribution.
+    """
+    weekday_df = []
+    for i in range(7):
+        weekday_df.append(df[df['Day_Index'] == i][col])
+    return ss.kruskal(*weekday_df, nan_policy='omit')
