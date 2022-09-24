@@ -37,7 +37,7 @@ c_val = list(bias_df['Confirmed'])
 fixed_bias_data = {
     "time_steps": len(c_val),
     "C": c_val,
-    "Rt_window": 2,
+    "Rt_window": 4,
     "serial_interval": RenewalModel(R0=None).serial_interval,
     "alpha_prior": [1 for _ in range(7)]  # larger val -> tighter dist
 }
