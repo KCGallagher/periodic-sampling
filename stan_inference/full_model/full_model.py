@@ -12,7 +12,7 @@ def smoothen_Rt(my_list, window):
     return smooth_list[window:]
 
 # Simulate Renewal Model
-time_steps = 600; N_0 = 1000; seed=41; R0_diff = 0.1; R_n = 10
+time_steps = 600; N_0 = 10000; seed=41; R0_diff = 0.05; R_n = 10
 start_date = '01/01/2020'; bias_method = 'poisson'
 
 bias = [0.5, 1.4, 1.2, 1.1, 1.1, 1.1, 0.6]  # Always given with monday first
@@ -37,7 +37,7 @@ c_val = list(bias_df['Confirmed'])
 fixed_bias_data = {
     "time_steps": len(c_val),
     "C": c_val,
-    "Rt_window": 4,
+    "Rt_window": 2,
     "serial_interval": RenewalModel(R0=None).serial_interval,
     "alpha_prior": [1 for _ in range(7)]  # larger val -> tighter dist
 }
