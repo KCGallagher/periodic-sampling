@@ -29,7 +29,7 @@ Further information about this data (such as collection methods) can be found in
 
 ### Periodic Reporting Trends
 
-IN this data we typically observe a strong oscilatory trend, as depicted in both the cases and death data from England, UK. The raw daily data is given in grey, with a 7-day moving average (typically used in most publications) superimposed in colour.
+In this data we typically observe a strong oscilatory trend, as depicted in both the cases and death data from England, UK. The raw daily data is given in grey, with a 7-day moving average (typically used in most publications) superimposed in colour.
 
 ![UK Covid Data](images/data_trends/daily_data_EnglandUnitedKingdom.png)
 
@@ -57,12 +57,15 @@ bias_df = rep.fixed_bias_report(bias = [0.5, 1.4, 1.2, 1.1, 1.1, 1.1, 0.6],
 
 This would generate the following data:
 
-![Synthetic Data Example](images/synthetic_examples/biased_output_T_200_N0_500.png)
+![Synthetic Data Example](images/synthetic_data_examples/biased_output_T_200_N0_500.png)
 
 All functions have complete docstrings to record their functionality and expected arguments.
 
 ## Inference Methods
 
-Both Metropolis-Hastings and Gibbs sampling methods are implemented for use in Bayesian inference. These have separate parameter and sampling classes, but a combined (_'mixed'_) sampling method is also implemented to allow inference on multiple parameters of different types.
+Both Metropolis-Hastings and Gibbs sampling methods are implemented for use in Bayesian inference. These have separate parameter and sampling classes, but a combined (_'mixed'_) sampling method is also implemented to allow inference on multiple parameters of different types. We also utilise independent sampling for the discrete case values in inference of the ground truth time series.
 
-This flexible implementation is applicable to a wide range of problems, with some examples from Ben Lambert's "[A Student's Guide to Bayesian Statistics](https://study.sagepub.com/lambert)" given in [`exampler.ipynb`](periodic_sampling/gibbs_sampler/exampler.ipynb).
+This flexible implementation is applicable to a wide range of problems, with some examples from Ben Lambert's "[A Student's Guide to Bayesian Statistics](https://study.sagepub.com/lambert)" given in [`exampler.ipynb`](periodic_sampling/sampling_methods/exampler.ipynb). These methods are then applied to the inference of the true time series from the biased time series, under various assumptions described in a separate [`README`](periodic_sampling/REAME.md).
+
+We also introduce a number of [methods](stan_inference/) in [Stan](https://mc-stan.org/) using a [No U-Turn Sampler](https://arxiv.org/abs/1111.4246), to handle larger populations without the computational limits we have imposed on our mixed sampler through the use of independent sampling on the time series. An example of predictions for the timeseries and reproduction number profile (based on the posterior mean) is given below:
+![Stan Example Example](stan_inference/full_model/stepped_profile/combined_series_poisson_T_100_N0_100_R0diff_0.2_It_5000_seed_41.png)
