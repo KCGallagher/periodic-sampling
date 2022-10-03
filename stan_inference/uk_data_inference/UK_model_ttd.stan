@@ -90,14 +90,17 @@ model {
 
         real D_i = 0;
         // for(j in 1:delay_window) {
-        //     D_i += (temp_delay[i] * I[i - j + 1]);
+        //     D_i += (temp_delay[j] * I[i - j + 1]);
         // }
         // D[i] = D_i;
 
-        if(i>7)
-            D_i = I[i-7];
-        else {
+        if(i<60)
             D_i = I[i];
+        else {
+            // D_i = I[i-7];
+            for(j in 1:60) {
+                D_i += (gamma_delay[j] * m * I[i - j + 1]);
+            }
         }
 
         // P(C_t | a_i, I_t) - Reporting Process
