@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 
+# Environment Files
+.vscode/*
+
 # Packaging files
 periodic_sampling.egg-info
 
