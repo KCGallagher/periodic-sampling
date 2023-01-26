@@ -94,11 +94,11 @@ model {
         // }
         // D[i] = D_i;
 
-        if(i<60)
+        if(i<size(gamma_delay))
             D_i = I[i];
         else {
             // D_i = I[i-7];
-            for(j in 1:60) {
+            for(j in 1:size(gamma_delay)) {
                 D_i += (gamma_delay[j] * m * I[i - j + 1]);
             }
         }
