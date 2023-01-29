@@ -4,11 +4,22 @@
 
 import os
 import re
+import numpy as np
 import pandas as pd
 from datetime import datetime
 
 
-def generate_location_df(input_dir, location_key):
+def sumarise_column(col):
+    if np.issubdtype(col, np.number):
+        if col.name in ['Confirmed', 'Deaths', 'Recovered', 'Active']:
+            return col.sum()
+        else:
+            return col.mean()
+    else:
+        return list(col.values)[0]
+
+
+def generate_location_df(input_dir, location_key, sum_country=False):
     """Generate country-specific df from directory with date-wise
     csv files containing internationally collated data.
     """
@@ -16,17 +27,23 @@ def generate_location_df(input_dir, location_key):
     for file in os.listdir(input_dir):
         if not file.endswith(".csv"):
             continue
-        try:
-            df = pd.read_csv(input_dir + file)
-            row = df.loc[df["Combined_Key"] == location_key].copy()
-        except KeyError:
-            if "Province_State" in df.columns.values:
-                row = df.loc[df["Province_State"] == location_key].copy()
-            else:
-                continue
+        df = pd.read_csv(input_dir + file)
+        if sum_country:
+            country_code = list(set(["Country_Region", "Country/Region"]) & set(df.columns.values))[0]
+            rows = df[df[country_code] == location_key]
+            row = pd.DataFrame(rows.apply(sumarise_column)).transpose()
+
+        else:
+            try:
+                row = df.loc[df["Combined_Key"] == location_key].copy()
+            except KeyError:
+                if "Province_State" in df.columns.values:
+                    row = df.loc[df["Province_State"] == location_key].copy()
+                else:
+                    continue
 
         row["Date"] = datetime.strptime(file.split(".")[0], '%m-%d-%Y')
-        country_df = pd.concat([country_df, row])
+        country_df = pd.concat(pd.Series([country_df, row]), axis=0)
 
     # Resolve naming inconsistencies in data
     try:
@@ -39,14 +56,16 @@ def generate_location_df(input_dir, location_key):
 
     return country_df
 
-def generate_all_df(input_dir, output_dir, overwrite_files = False):
+def generate_all_df(input_dir, output_dir, countries_only = False, overwrite_files = False):
     """Generates location specific files for all locations found in the
     first valid file in the directory."""
     search_index = 0
     while True:
         initial_file = os.listdir(input_dir)[search_index]
         df = pd.read_csv(input_dir + initial_file)
-        if "Combined_Key" in df.columns:
+        if countries_only and "Country_Region" in df.columns:
+            locations = df["Country_Region"].unique()
+        elif "Combined_Key" in df.columns:
             locations = df["Combined_Key"].unique()
         elif "Province_State" in df.columns:
             locations = df["Province_State"].unique()
@@ -54,12 +73,12 @@ def generate_all_df(input_dir, output_dir, overwrite_files = False):
             search_index += 1
             continue
         break
-
+    
     for location in locations:
-        output_name = output_dir + re.sub('\W+','',location) + ".csv"
+        output_name = output_dir + re.sub('\W+', '', location) + ".csv"
         if os.path.isfile(output_name) and not overwrite_files:
             continue
-        country_df = generate_location_df(input_dir, location)
+        country_df = generate_location_df(input_dir, location, countries_only)
         country_df.to_csv(output_name)
 
 def rel_reporting_calc(df, column_list):
@@ -78,5 +97,10 @@ output_dir = "data/"
 location_key = "England, United Kingdom"
 
 if __name__ == '__main__':
-    country_df = generate_location_df(input_dir, location_key)
-    country_df.to_csv(output_dir + re.sub('\W+','',location_key) + ".csv")
+    # country_df = generate_location_df(input_dir, location_key)
+    # country_df.to_csv(output_dir + re.sub('\W+','',location_key) + ".csv")
+
+    input_dir = "COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/"
+    output_dir = "data/country_data/"
+
+    generate_all_df(input_dir, output_dir, overwrite_files=False, countries_only=True)
