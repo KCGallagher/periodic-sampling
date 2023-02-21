@@ -12,6 +12,17 @@ Using methods from the [analysis](analysis) folder, we characterise periodic tre
 
 This contains a guide to generating synthetic data based on methods in [`synthetic_data`](synthetic_data), applying periodic biases (with various noise spectra), and compares the reaulting synthetic bias to the biases observed in genuine data from the UK.
 
+The biases are implemented through [biased reporters](synthetic_data/biased_reported.py), which have a number of possible noise spectra:
+* **Unbiased Reporting** - No bias applied.
+* **Daily Bias** - Scaling factor applied to each weekday.
+* **Delayed Reporting** - Instead of rescaling the cases reported on each given day, distributes cases that occur on a given day to subsequent days according to a gamma distribution specific to each weekday.
+
+For daily rescaling, there are four possible sub-methods, as documented in that [reporter](https://github.com/KCGallagher/periodic-sampling/blob/86ecaa72ddede59833d535042ea8d7e0d03bbe63/periodic_sampling/synthetic_data/biased_reporter.py#L63):
+* **Scale** - Scales cases on a given day by a fixed value (the reporting factor).
+* **Poisson** - Samples cases on a given day from a Poisson distribution, with a mean given by the true number of cases on that day scaled by the reporting factor for that day of the week.
+* **Multinomial** - Redistributes cases within each week based on a random multinomical distribution, weighted by the reporting factors for each day.
+* **Dirichlet** - Redistributes cases within each week based on a dirichlet distribution, weighted by the reporting factors for each day. This is guarenteed to preserve the true number of cases in a given week.
+
 ## Bayesian Inference
 
 The overall framework for this, containing all custom posterior distributions, is contained within the [`periodic_model`](periodic_model.py) file. The framework (including multichain adaptations) is given in the [`inference_workflow`](inference_workflow.py), however we refer unfamiliar users to the notebooks below which will give a more complete introduction to the methods used.
