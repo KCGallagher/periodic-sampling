@@ -59,7 +59,7 @@ This would generate the following data:
 
 ![Synthetic Data Example](images/synthetic_data_examples/biased_output_T_200_N0_500.png)
 
-All functions have complete docstrings to record their functionality and expected arguments.
+All functions have complete docstrings to record their functionality and expected arguments. Further detail is also given in the [README](periodic_sampling/README.md) for the [`periodic_sampling`](periodic_sampling) module.
 
 ## Inference Methods
 
