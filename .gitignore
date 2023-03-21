@@ -9,7 +9,7 @@ __pycache__/
 periodic_sampling.egg-info
 
 # Jupyter Notebook checkpoints
-*/.ipynb_checkpoints
+.ipynb_checkpoints
 
 # Bulk datafiles for international analysis
 data/*/
