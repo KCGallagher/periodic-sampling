@@ -74,5 +74,4 @@ model {
 
     alpha ~ dirichlet(alpha_prior); 
     R ~ gamma(1,1);
-    I ~ normal(C, sqrt(C));
 }
