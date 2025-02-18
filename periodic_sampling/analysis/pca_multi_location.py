@@ -9,11 +9,11 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
-from .country_data import generate_all_df, rel_reporting_calc
+from country_data import generate_all_df, rel_reporting_calc
 
 
 input_dir = "COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/"
-output_dir = "data/global_data/"
+output_dir = "data/country_data/"
 
 def _generate_pca_row(search_dir, file, column):
     initial_df = pd.read_csv(search_dir + file)
@@ -30,7 +30,10 @@ def generate_pca_array(search_dir, column):
     Column is either 'Cases' or 'Deaths'."""
     pca_array = []
     for file in os.listdir(search_dir):
-        row = _generate_pca_row(search_dir, file, column)
+        try:
+            row = _generate_pca_row(search_dir, file, column)
+        except KeyError:
+            continue
         if (np.any(np.isnan(row)) or (np.sum(row) <= 0)):
             continue
         pca_array.append(row)
@@ -86,7 +89,7 @@ def run_pca(arr, n_components):
     return pca_df
 
 if __name__ == '__main__':
-    generate_all_df(input_dir, output_dir, overwrite_files=False)
+    # generate_all_df(input_dir, output_dir, overwrite_files=False)
     pca_array = generate_pca_array(output_dir, 'Cases')
     test_normalisation(pca_array, rtol=0.05)
     pca_df = run_pca(np.transpose(pca_array), n_components=2)
