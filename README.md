@@ -1,12 +1,14 @@
 # Periodic Sampling (COVID-19 Data)
 
-This package utilises [Bayesian Inference](https://en.wikipedia.org/wiki/Bayesian_inference) and [Gibbs Sampling](https://en.wikipedia.org/wiki/Gibbs_sampling) to explore periodic data trends in real or synthetic Covid-19 case data.
+This repository explores periodic trends in reported case and death data for multiple diseases. This work supports the paper '_Identification and Attribution of Weekly Periodic Biases in Global Epidemiological Time Series Data_', currently available as a preprint on [medRxiv](https://doi.org/10.1101/2023.06.13.23290903).
 
-## Data Files
+We also provide a package for comprehensive [Bayesian Inference](https://en.wikipedia.org/wiki/Bayesian_inference) and [Gibbs Sampling](https://en.wikipedia.org/wiki/Gibbs_sampling) methods to explore this periodic data trends in real or synthetic Covid-19 case data.
 
-Timeseries from real Covid-19 data may be used, or generated synthetically from a renewal model
 
-### Real Data
+## Periodic Data Trends
+
+
+### Covid-19 Data
 
 We import Covid-19 case and death data from the [John Hopkins Database](https://coronavirus.jhu.edu/about). This data uploaded into separate `.csv` files on a daily basis, and so [routines](periodic_sampling/analysis/country_data.py) in the analysis module are provided to generate location-specific files over the history of the pandemic.
 
@@ -27,6 +29,10 @@ Currently these procedures are not packaged into a separate method, but this may
 
 Further information about this data (such as collection methods) can be found in a dedicated [`README`](data/README.md). Pre-generated example data files are also [available](data).
 
+### Other Diseases
+
+We also provide daily case data from the 1918 Spanish Flu and 2022 Haitian Cholera epidemics, in [`other_diseases`](other_diseases/).
+
 ### Periodic Reporting Trends
 
 In this data we typically observe a strong oscilatory trend, as depicted in both the cases and death data from England, UK. The raw daily data is given in grey, with a 7-day moving average (typically used in most publications) superimposed in colour.
@@ -37,9 +43,22 @@ There are consistent over/under reporting trends on particular weekdays across t
 
 ![Weekday Bias Violin Plot](images/data_trends/daily_violin_EnglandUnitedKingdom.png)
 
+A global analysis of these trends is further provided in [`global_pca.ipynb`](periodic_sampling/global_pca.ipynb).
+
+### Origin of Bias
+
+We further use a dataset from PHE that distinguishes between the true date of death, and the date the death has been attributed to on online reporting systems. From analysis in [`periodicity_analysis.ipynb`](UK_raw_data/periodicity_analysis.ipynb), we identify a weekly oscillation in the death data grouped by reporting date that is not present in the true event date, suggesting that this weekly trend is fully attributable to biases in the reporting process.
+
+![Power Spectrum of UK PHE Data](images/uk_phe_data/daily_fft_cases_deaths.png)
+
+
+
+
+## $R_{t}$ Inference
+
 ### Synthetic Data
 
-It is also possible to generate synthetic pandemic data using a [renewal model framework](periodic_sampling/synthetic_data/renewal_model.py). Alongside this are provided various [reporter functions](periodic_sampling/synthetic_data/biased_reporter.py), which can return/save this data in `.csv` format, as well as applying various reporting biases to replicate the trends described above.
+To benchmark inference approaches with a known ground truth, we generate synthetic pandemic data using a [renewal model framework](periodic_sampling/synthetic_data/renewal_model.py). Alongside this are provided various [reporter functions](periodic_sampling/synthetic_data/biased_reporter.py), which can return/save this data in `.csv` format, as well as applying various reporting biases to replicate the trends described above.
 
 An example of this process is given below:
 
@@ -61,7 +80,7 @@ This would generate the following data:
 
 All functions have complete docstrings to record their functionality and expected arguments. Further detail is also given in the [README](periodic_sampling/README.md) for the [`periodic_sampling`](periodic_sampling) module.
 
-## Inference Methods
+### Inference Methods
 
 Both Metropolis-Hastings and Gibbs sampling methods are implemented for use in Bayesian inference. These have separate parameter and sampling classes, but a combined (_'mixed'_) sampling method is also implemented to allow inference on multiple parameters of different types. We also utilise independent sampling for the discrete case values in inference of the ground truth time series.
 
