@@ -112,9 +112,11 @@ class Reporter():
             df['Confirmed'] = df.apply(lambda row: ss.poisson.rvs(row['Cases'] * bias[row['Weekday']]), axis=1)
         elif method == 'multinomial':
             df['Confirmed'] = self._rolling_multinomial(df, bias)
+        elif method == 'dirichlet':
+            df['Confirmed'] = self._rolling_dirichlet(df, bias)
         else:
-            raise ValueError(f"Unknown method argument {method} - valid"
-                             + " arguments are scale, poisson and multinomial")
+            raise ValueError(f"Unknown method argument {method} - valid arguments"
+                             + " are scale, poisson, multinomial and dirichlet")
 
 
         df.rename(columns={'Cases': 'Ground Truth'}, inplace=True)
@@ -144,6 +146,32 @@ class Reporter():
             week_data = data[7*w : 7*(w + 1)]
             day_counts = np.random.multinomial(sum(week_data), weights)
             data[7*w : 7*(w + 1)] = day_counts
+        return data
+
+    def _rolling_dirichlet(self, df, bias):
+        """For each period of 7 days, redistributes the total number
+        of cases according to the bias values.
+
+        By sampling reporting factors for a week at a time (as opposed 
+        to every day), we better preserve the overall case numbers.
+
+        Parameters
+        df : pandas.Dataframe
+            Overall dataframe containing cases and date columes
+        bias : list
+            List of fixed weights to use for Dirichlet distribution
+        """
+        data = list(df['Cases'].copy())
+        weights = [i / 7 for i in bias.values()]
+        week_count = len(data) // 7
+
+        first_day_index = df['Date'][0].weekday()
+        weights = [weights[(i+first_day_index) % 7] for i in range(7)]
+
+        for w in range(week_count):
+            week_data = data[7*w : 7*(w + 1)]
+            rf = np.random.dirichlet(weights)
+            data[7*w : 7*(w + 1)] = [week_data[i] * (7 * rf[i]) for i in range(7)]
         return data
 
     def delay_distribution_report(self, params, output_path=None):

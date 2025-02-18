@@ -2,11 +2,14 @@
 __pycache__/
 *.py[cod]
 
+# Environment Files
+.vscode/*
+
 # Packaging files
 periodic_sampling.egg-info
 
 # Jupyter Notebook checkpoints
-*/.ipynb_checkpoints
+.ipynb_checkpoints
 
 # Bulk datafiles for international analysis
 data/*/
@@ -18,4 +21,8 @@ data/*/
 # Profiling outputs
 *.prof
 *.lprof
+
+# Build dir for stan
+build
+stan_inference/build
 

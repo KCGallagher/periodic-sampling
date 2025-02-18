@@ -3,7 +3,6 @@
 # See `fixed_bias_sampler` or `variable_Rt_sampler` for derivations of functions included
 #
 
-from ast import Lambda
 import math
 import numpy as np
 import scipy.stats as ss
