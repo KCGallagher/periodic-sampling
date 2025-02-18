@@ -17,15 +17,16 @@ def fourier_transform(df, column, compute_psd = False):
     fftfreq = sp.fftpack.fftfreq(len(data_fft), 1/7)  # Frequency units in weeks
     return (data_psd, fftfreq) if compute_psd else (data_fft, fftfreq)
 
-def plot_fft(data, freq, ax, label, **kwargs):
+def plot_fft(data, freq, ax, label, ylim=None, **kwargs):
     i = freq > 0  # Remove negative frequencies
     ax.plot(freq[i], 10 * np.log10(data[i]), label=label, **kwargs)
-    y_lim = ax.get_ylim()
+    y_lim = ax.get_ylim() if ylim is None else ylim
     ax.vlines([(n+1) for n in range(3)], y_lim[0], y_lim[1],
               colors='gray', linestyles='dashed', alpha=0.6)
     # ax.axvspan(0, 0.9, facecolor='gray', alpha=0.3)
     ax.set_xlabel('Frequency (1/week)')
     ax.set_ylabel('PSD (dB)')
+    ax.set_ylim(y_lim)
     ax.legend(loc=3); ax.set_xlim((0, max(freq[i])))
 
 def rel_reporting_box(daily_df, column, ax, color, label):

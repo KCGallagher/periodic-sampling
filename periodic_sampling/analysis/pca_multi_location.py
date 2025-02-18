@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
-from country_data import generate_all_df, rel_reporting_calc
+from .country_data import generate_all_df, rel_reporting_calc
 
 
 input_dir = "COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/"
@@ -94,3 +94,10 @@ if __name__ == '__main__':
     test_normalisation(pca_array, rtol=0.05)
     pca_df = run_pca(np.transpose(pca_array), n_components=2)
     print(pca_df.round(2))
+
+    df = pd.DataFrame(pca_array)
+    df['score'] = df.apply(lambda row: np.dot(row, pca_df.PC2), axis=1)
+    df = df.sort_values('score')
+    print(df[0:10].mean())
+    # print(df)
+    # pca_array['score'] = pca_array.apply
