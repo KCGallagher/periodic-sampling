@@ -47,7 +47,7 @@ def rel_reporting_violin(daily_df, value_cols, ax, cutoff, colors, labels):
         value_cols[i] = 'Dif_' + value
         id_col.remove('Dif_' + value)
     violin_df = pd.melt(daily_df, id_vars = id_col, value_vars=value_cols, var_name='Type')
-    ax.hlines(y=1, xmin=-1, xmax=7, linestyles="dashed", color="gray")
+    ax.hlines(y=1, xmin=-1, xmax=7, linestyles="dotted", color="gray")
 
     #N.B exclude zero values from discrete nature of data - distorts violin
     sns.violinplot(data=violin_df, y=violin_df[(violin_df['value']<cutoff) & (violin_df['value']>0)]['value'],
